@@ -1,2 +1,8 @@
 Flask==3.0.3
 python-dotenv==1.0.1
+
+# FastAPI stack (added for backend FastAPI implementation)
+fastapi
+uvicorn
+passlib[bcrypt]
+python-jose
