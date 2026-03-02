@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": null,
+    "patient_id": "pat1",
+    "date": "2026-03-10",
+    "time": "09:00",
+    "status": "Scheduled"
+  },
+  {
+    "id": "489f7647-7ab2-4b93-b80b-29f50a04e45a",
+    "patient_id": "pat1",
+    "date": "2026-03-10",
+    "time": "09:00",
+    "status": "Scheduled"
+  }
+]

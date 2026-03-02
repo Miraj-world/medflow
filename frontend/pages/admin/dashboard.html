@@ -14,17 +14,43 @@
   <a href="../auth/auth-select.html">Logout</a>
 </nav>
 
-<section>
+<section style="margin: 20px 0; padding: 15px; border: 1px solid #ccc;">
   <h2>Metrics</h2>
-  <p>Total Patients: 120</p>
-  <p>Appointments This Week: 45</p>
+  <p>Total Patients: <strong id="total-patients">--</strong></p>
+  <p>Total Appointments: <strong id="total-appointments">--</strong></p>
 </section>
 
-<section>
-  <h2>Charts</h2>
-  <div>Bar Chart Placeholder</div>
-  <div>Pie Chart Placeholder</div>
+<section style="margin: 20px 0; padding: 15px; border: 1px solid #ccc;">
+  <h2>System Status</h2>
+  <p id="system-status">Loading...</p>
 </section>
+
+<script>
+  async function loadMetrics() {
+    try {
+      const token = localStorage.getItem('token');
+      const resp = await apiFetch('http://127.0.0.1:8000/admin/metrics');
+      
+      if (!resp.ok) {
+        throw new Error('Failed to load metrics');
+      }
+      
+      const data = await resp.json();
+      
+      document.getElementById('total-patients').textContent = data.total_patients || 0;
+      document.getElementById('total-appointments').textContent = data.appointments || 0;
+      
+      const status = `System is operational. Database contains ${data.total_patients} patients and ${data.appointments} appointments.`;
+      document.getElementById('system-status').textContent = status;
+    } catch (err) {
+      document.getElementById('system-status').textContent = `⚠️ Error: ${err.message}`;
+      document.getElementById('total-patients').textContent = 'Error';
+      document.getElementById('total-appointments').textContent = 'Error';
+    }
+  }
+  
+  loadMetrics();
+</script>
 
 </body>
 </html>

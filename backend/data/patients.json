@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "id": "pat1",
+    "name": "Alice",
+    "dob": "1990-01-01",
+    "gender": "Female",
+    "phone": "555-0001",
+    "address": "123 Main St",
+    "notes": null
+  },
+  {
+    "id": null,
+    "name": "Bob",
+    "dob": "1985-05-05",
+    "gender": "Male",
+    "phone": "555-0002",
+    "address": "456 Side St",
+    "notes": null
+  },
+  {
+    "id": "c2518a26-c328-441b-93fc-6051a0994583",
+    "name": "Bob",
+    "dob": "1985-05-05",
+    "gender": "Male",
+    "phone": "555-0002",
+    "address": "456 Side St",
+    "notes": null
+  },
+  {
+    "id": "bc497f12-e7bf-4eeb-b25f-1b59a14e5643",
+    "name": "Bob",
+    "dob": "1985-05-05",
+    "gender": "Male",
+    "phone": "555-0002",
+    "address": "456 Side St",
+    "notes": null
+  }
+]

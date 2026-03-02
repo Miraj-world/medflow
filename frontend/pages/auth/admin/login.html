@@ -41,7 +41,7 @@
       }
       const dataResp = await resp.json();
       localStorage.setItem('token', dataResp.access_token);
-      window.location.href = '/admin/dashboard';
+      window.location.href = '../../admin/dashboard.html';
     } catch (err) {
       alert(err.message);
     }

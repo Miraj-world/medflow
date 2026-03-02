@@ -30,5 +30,23 @@
     "role": "clinician",
     "license": "123",
     "organization": null
+  },
+  {
+    "name": "Test Clinician",
+    "email": "test@example.com",
+    "password": "$pbkdf2-sha256$29000$uvdeq/U.BwCg9B6jNAag9A$u4lp8zAi3LnBhgnv.MeS3Rkm8tzPeCuYL7yE/W2a/AM",
+    "role": "clinician",
+    "license": "ABC123",
+    "organization": null,
+    "specialty": "General Medicine"
+  },
+  {
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "password": "$pbkdf2-sha256$29000$yPlfS8nZW4uxNqb0fm9NqQ$WkNTNEhuKwP5KlAySulTkFMsootj2cawy8mElFs4ZV4",
+    "role": "admin",
+    "license": null,
+    "organization": null,
+    "specialty": null
   }
 ]

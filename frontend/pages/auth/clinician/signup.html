@@ -55,7 +55,7 @@
       });
       const loginData = await loginResp.json();
       localStorage.setItem('token', loginData.access_token);
-      window.location.href = '/clinician/dashboard';
+      window.location.href = '../../clinician/dashboard.html';
     } catch (err) {
       alert(err.message);
     }

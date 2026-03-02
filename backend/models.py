@@ -9,10 +9,27 @@ class User(BaseModel):
     role: str
     license: Optional[str] = None
     organization: Optional[str] = None
+    specialty: Optional[str] = None
+
+
+class SignupRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    confirm: str
+    role: str
+    license: Optional[str] = None
+    organization: Optional[str] = None
+    specialty: Optional[str] = None
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 
 class Patient(BaseModel):
-    id: str
+    id: Optional[str] = None
     name: str
     dob: str
     gender: str
@@ -22,7 +39,7 @@ class Patient(BaseModel):
 
 
 class Appointment(BaseModel):
-    id: str
+    id: Optional[str] = None
     patient_id: str
     date: str
     time: str

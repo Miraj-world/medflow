@@ -41,7 +41,7 @@
       }
       const d = await resp.json();
       localStorage.setItem('token', d.access_token);
-      window.location.href = '/clinician/dashboard';
+      window.location.href = '../../clinician/dashboard.html';
     } catch (err) {
       alert(err.message);
     }
