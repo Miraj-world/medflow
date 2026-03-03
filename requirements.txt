@@ -6,3 +6,7 @@ fastapi
 uvicorn
 passlib[bcrypt]
 python-jose
+pydantic
+requests
+# utilities
+python-dotenv
