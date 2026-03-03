@@ -1,0 +1,450 @@
+import { useEffect, useMemo, useState } from "react";
+import Layout from "../components/Layout";
+import { apiFetch } from "../api/client";
+
+type Patient = {
+  id: string;
+  created_at: string;
+  first_name: string;
+  last_name: string;
+  dob?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  notes?: string | null;
+};
+
+type Appointment = {
+  id: string;
+  created_at: string;
+  patient_id: string;
+  clinician?: string | null;
+  scheduled_at: string;
+  reason?: string | null;
+  status: string;
+  notes?: string | null;
+};
+
+function toDateOnly(isoOrDate: string) {
+  if (!isoOrDate) return "";
+  return isoOrDate.slice(0, 10);
+}
+
+export default function ClinicianDashboard() {
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Patient filters
+  const [patientQ, setPatientQ] = useState("");
+  const [patientFromDate, setPatientFromDate] = useState(""); // YYYY-MM-DD
+  const [patientToDate, setPatientToDate] = useState(""); // YYYY-MM-DD
+
+  // Appointment filters
+  const [apptQ, setApptQ] = useState("");
+  const [apptFromDate, setApptFromDate] = useState(""); // YYYY-MM-DD
+  const [apptToDate, setApptToDate] = useState(""); // YYYY-MM-DD
+
+  // create patient form
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dob, setDob] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+
+  // create appointment form
+  const [apptPatientId, setApptPatientId] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [reason, setReason] = useState("");
+
+  async function load() {
+    setLoading(true);
+    setError("");
+    try {
+      const [p, a] = await Promise.all([
+        apiFetch("/patients"),
+        apiFetch("/appointments"),
+      ]);
+      setPatients(p as Patient[]);
+      setAppointments(a as Appointment[]);
+    } catch (e: any) {
+      setError(e?.message || "Failed to load clinician data");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const patientsById = useMemo(() => {
+    const m = new Map<string, Patient>();
+    patients.forEach((p) => m.set(p.id, p));
+    return m;
+  }, [patients]);
+
+  const filteredPatients = useMemo(() => {
+    const query = patientQ.trim().toLowerCase();
+    const from = patientFromDate
+      ? new Date(patientFromDate + "T00:00:00Z").getTime()
+      : null;
+    const to = patientToDate
+      ? new Date(patientToDate + "T23:59:59Z").getTime()
+      : null;
+
+    return patients.filter((p) => {
+      if (query) {
+        const blob =
+          `${p.id} ${p.first_name} ${p.last_name} ${p.email ?? ""} ${p.phone ?? ""} ${p.dob ?? ""}`.toLowerCase();
+        if (!blob.includes(query)) return false;
+      }
+
+      if (from || to) {
+        const created = p.created_at ? new Date(p.created_at).getTime() : 0;
+        if (from && created < from) return false;
+        if (to && created > to) return false;
+      }
+
+      return true;
+    });
+  }, [patients, patientQ, patientFromDate, patientToDate]);
+
+  const filteredAppointments = useMemo(() => {
+    const query = apptQ.trim().toLowerCase();
+    const from = apptFromDate
+      ? new Date(apptFromDate + "T00:00:00Z").getTime()
+      : null;
+    const to = apptToDate
+      ? new Date(apptToDate + "T23:59:59Z").getTime()
+      : null;
+
+    return appointments.filter((a) => {
+      // text filter
+      if (query) {
+        const p = patientsById.get(a.patient_id);
+        const patientName = p ? `${p.first_name} ${p.last_name}` : "";
+        const blob =
+          `${a.id} ${a.patient_id} ${patientName} ${a.scheduled_at} ${a.status} ${a.reason ?? ""} ${a.clinician ?? ""}`.toLowerCase();
+        if (!blob.includes(query)) return false;
+      }
+
+      // date range filter (based on scheduled_at date portion)
+      if (from || to) {
+        const dateOnly = toDateOnly(a.scheduled_at);
+        const ts = dateOnly ? new Date(dateOnly + "T12:00:00Z").getTime() : 0;
+        if (from && ts < from) return false;
+        if (to && ts > to) return false;
+      }
+
+      return true;
+    });
+  }, [appointments, apptQ, apptFromDate, apptToDate, patientsById]);
+
+  async function addPatient() {
+    setError("");
+    try {
+      if (!firstName.trim() || !lastName.trim()) {
+        throw new Error("First and last name are required");
+      }
+
+      await apiFetch("/patients", {
+        method: "POST",
+        body: JSON.stringify({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          dob: dob.trim() || null,
+          email: email.trim() || null,
+          phone: phone.trim() || null,
+        }),
+      });
+
+      setFirstName("");
+      setLastName("");
+      setDob("");
+      setEmail("");
+      setPhone("");
+
+      await load();
+    } catch (e: any) {
+      setError(e?.message || "Failed to create patient");
+    }
+  }
+
+  async function addAppointment() {
+    setError("");
+    try {
+      if (!apptPatientId) throw new Error("Select a patient");
+      if (!scheduledAt.trim()) throw new Error("Scheduled time is required");
+
+      await apiFetch("/appointments", {
+        method: "POST",
+        body: JSON.stringify({
+          patient_id: apptPatientId,
+          scheduled_at: scheduledAt.trim(),
+          reason: reason.trim() || null,
+        }),
+      });
+
+      setScheduledAt("");
+      setReason("");
+      await load();
+    } catch (e: any) {
+      setError(e?.message || "Failed to create appointment");
+    }
+  }
+
+  return (
+    <Layout title="Clinician Dashboard">
+      <div className="space-y-6">
+        {loading && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
+            Loading...
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="rounded-2xl border border-red-300 bg-red-50 p-6 shadow-sm dark:border-red-700 dark:bg-red-950/50">
+            {error}
+          </div>
+        )}
+
+        {/* Create forms */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
+            <h2 className="text-lg font-semibold">Create Patient</h2>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <input
+                className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+                placeholder="First name *"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+              <input
+                className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+                placeholder="Last name *"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
+              <input
+                className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+                placeholder="DOB (YYYY-MM-DD)"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+              />
+              <input
+                className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+                placeholder="Phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+              <input
+                className="md:col-span-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={addPatient}
+              className="mt-4 w-full rounded-xl bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
+            >
+              Add Patient
+            </button>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
+            <h2 className="text-lg font-semibold">Create Appointment</h2>
+
+            <div className="mt-4 grid gap-3">
+              <select
+                className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+                value={apptPatientId}
+                onChange={(e) => setApptPatientId(e.target.value)}
+              >
+                <option value="">Select patient *</option>
+                {patients.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.first_name} {p.last_name} ({p.id.slice(0, 8)})
+                  </option>
+                ))}
+              </select>
+
+              <input
+                className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+                placeholder="Scheduled at (e.g., 2026-03-02T15:30:00Z) *"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+              />
+
+              <input
+                className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+                placeholder="Reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+
+              <button
+                type="button"
+                onClick={addAppointment}
+                className="w-full rounded-xl bg-sky-700 px-4 py-2 text-sm font-medium text-white hover:bg-sky-800"
+              >
+                Add Appointment
+              </button>
+
+              {patients.length === 0 && (
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  Add a patient first to create an appointment.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Patients */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg font-semibold">Patients</h2>
+
+            <button
+              className="rounded-xl border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-sky-800"
+              onClick={load}
+              type="button"
+            >
+              Refresh
+            </button>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <input
+              className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+              placeholder="Search name, id, email, phone..."
+              value={patientQ}
+              onChange={(e) => setPatientQ(e.target.value)}
+            />
+
+            <input
+              type="date"
+              className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+              value={patientFromDate}
+              onChange={(e) => setPatientFromDate(e.target.value)}
+            />
+
+            <input
+              type="date"
+              className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+              value={patientToDate}
+              onChange={(e) => setPatientToDate(e.target.value)}
+            />
+          </div>
+
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-slate-600 dark:text-slate-300">
+                <tr>
+                  <th className="py-2 pr-4">Name</th>
+                  <th className="py-2 pr-4">DOB</th>
+                  <th className="py-2 pr-4">Email</th>
+                  <th className="py-2 pr-4">Phone</th>
+                  <th className="py-2 pr-4">Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPatients.map((p) => (
+                  <tr key={p.id} className="border-t border-slate-100 dark:border-slate-700">
+                    <td className="py-2 pr-4">
+                      {p.first_name} {p.last_name}
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{p.id}</div>
+                    </td>
+                    <td className="py-2 pr-4">{p.dob ?? "-"}</td>
+                    <td className="py-2 pr-4">{p.email ?? "-"}</td>
+                    <td className="py-2 pr-4">{p.phone ?? "-"}</td>
+                    <td className="py-2 pr-4">{toDateOnly(p.created_at)}</td>
+                  </tr>
+                ))}
+
+                {!loading && filteredPatients.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-3 text-slate-600 dark:text-slate-300">
+                      No matching patients.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Appointments */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg font-semibold">Appointments</h2>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <input
+              className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+              placeholder="Search appointments..."
+              value={apptQ}
+              onChange={(e) => setApptQ(e.target.value)}
+            />
+
+            <input
+              type="date"
+              className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+              value={apptFromDate}
+              onChange={(e) => setApptFromDate(e.target.value)}
+            />
+
+            <input
+              type="date"
+              className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
+              value={apptToDate}
+              onChange={(e) => setApptToDate(e.target.value)}
+            />
+          </div>
+
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-slate-600 dark:text-slate-300">
+                <tr>
+                  <th className="py-2 pr-4">Scheduled</th>
+                  <th className="py-2 pr-4">Patient</th>
+                  <th className="py-2 pr-4">Status</th>
+                  <th className="py-2 pr-4">Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredAppointments.map((a) => {
+                  const p = patientsById.get(a.patient_id);
+                  const patientLabel = p ? `${p.first_name} ${p.last_name}` : a.patient_id;
+
+                  return (
+                    <tr key={a.id} className="border-t border-slate-100 dark:border-slate-700">
+                      <td className="py-2 pr-4">{a.scheduled_at}</td>
+                      <td className="py-2 pr-4">{patientLabel}</td>
+                      <td className="py-2 pr-4">{a.status}</td>
+                      <td className="py-2 pr-4">{a.reason ?? "-"}</td>
+                    </tr>
+                  );
+                })}
+
+                {!loading && filteredAppointments.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-3 text-slate-600 dark:text-slate-300">
+                      No matching appointments.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+}

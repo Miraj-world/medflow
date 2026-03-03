@@ -1,52 +1,17 @@
-[
-  {
-    "name": "T",
-    "email": "t2@test.com",
-    "password": "$pbkdf2-sha256$29000$nZOSMmbMmZMSIoSQ0joHoA$7v9NSdZOvQe/KfP.HeoHEaOUozrXfiYxH43QwHd97Qw",
-    "role": "clinician",
-    "license": "123",
-    "organization": null
+{
+  "patient": {
+    "username": "patient",
+    "hashed_password": "$pbkdf2-sha256$29000$.x9jTMnZ2/tf6/3fm5MSQg$MFB9vUCkOmvO15GWBT.IPulLz8DnDbAzfBowI2hvlB8",
+    "role": "patient"
   },
-  {
-    "name": "T",
-    "email": "t3@test.com",
-    "password": "$pbkdf2-sha256$29000$OSeEEAIghHAupXSu1RpjbA$JZGtqIY8MWZJXHkwFASSaZoItcuY6UHqSMMY5nrHLm0",
-    "role": "clinician",
-    "license": "123",
-    "organization": null
+  "clinician": {
+    "username": "clinician",
+    "hashed_password": "$pbkdf2-sha256$29000$fy/lvJfSGqOUkpKyFiLkfA$CyqcUNsgeCvrG6erOKLiTnxwrV1HqLg0WcvXfxKSVYc",
+    "role": "clinician"
   },
-  {
-    "name": "Miraj",
-    "email": "msanjid1s@semo.edu",
-    "password": "$pbkdf2-sha256$29000$ec.511rL.R/jPOccg3BujQ$lxfCvc0Ek9w4Thq/H/dU/.9LSYrShkTFX6HBv.TgmuQ",
-    "role": "admin",
-    "license": null,
-    "organization": "Mercy"
-  },
-  {
-    "name": "Miraj",
-    "email": "msanjid1@semo.edu",
-    "password": "$pbkdf2-sha256$29000$6J3zHoOwttYao1RqjfFeqw$I3a4o/c7kAM8kZ4U59wvphSNoA8kHKtV9AnAzGKbIyA",
-    "role": "clinician",
-    "license": "123",
-    "organization": null
-  },
-  {
-    "name": "Test Clinician",
-    "email": "test@example.com",
-    "password": "$pbkdf2-sha256$29000$uvdeq/U.BwCg9B6jNAag9A$u4lp8zAi3LnBhgnv.MeS3Rkm8tzPeCuYL7yE/W2a/AM",
-    "role": "clinician",
-    "license": "ABC123",
-    "organization": null,
-    "specialty": "General Medicine"
-  },
-  {
-    "name": "Admin User",
-    "email": "admin@example.com",
-    "password": "$pbkdf2-sha256$29000$yPlfS8nZW4uxNqb0fm9NqQ$WkNTNEhuKwP5KlAySulTkFMsootj2cawy8mElFs4ZV4",
-    "role": "admin",
-    "license": null,
-    "organization": null,
-    "specialty": null
+  "admin": {
+    "username": "admin",
+    "hashed_password": "$pbkdf2-sha256$29000$CuH8n9OaE0LoPYfwfs/ZWw$CLlAvm4TCM5nILxMSbpKrT9nQlOma1prQYNEoWiBvYE",
+    "role": "admin"
   }
-]
+}
