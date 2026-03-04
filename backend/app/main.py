@@ -15,6 +15,7 @@ from app.models import (
 from app.patients import router as patients_router
 from app.appointments import router as appointments_router
 from app.admin import router as admin_router
+from app.notifications_api import router as notifications_router  
 
 app = FastAPI(title="Healthcare Platform API")
 
@@ -106,3 +107,4 @@ def me(user=Depends(get_current_user)):
 app.include_router(patients_router)
 app.include_router(appointments_router)
 app.include_router(admin_router)
+app.include_router(notifications_router)  

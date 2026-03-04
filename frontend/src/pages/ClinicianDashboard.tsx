@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "../components/Layout";
+import NotificationBell from "../components/NotificationBell";
 import { apiFetch } from "../api/client";
 
 type Patient = {
@@ -46,6 +47,24 @@ export default function ClinicianDashboard() {
   const [apptFromDate, setApptFromDate] = useState(""); // YYYY-MM-DD
   const [apptToDate, setApptToDate] = useState(""); // YYYY-MM-DD
 
+  // ✅ Patient search checkbox filters
+  const [patientFilters, setPatientFilters] = useState({
+    name: true,
+    id: false,
+    email: false,
+    phone: false,
+    notes: false,
+  });
+
+  // ✅ Appointment search checkbox filters
+  const [apptFilters, setApptFilters] = useState({
+    patient: true,
+    clinician: false,
+    status: false,
+    date: true,
+    reason: false,
+  });
+
   // create patient form
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -62,10 +81,7 @@ export default function ClinicianDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [p, a] = await Promise.all([
-        apiFetch("/patients"),
-        apiFetch("/appointments"),
-      ]);
+      const [p, a] = await Promise.all([apiFetch("/patients"), apiFetch("/appointments")]);
       setPatients(p as Patient[]);
       setAppointments(a as Appointment[]);
     } catch (e: any) {
@@ -87,20 +103,27 @@ export default function ClinicianDashboard() {
 
   const filteredPatients = useMemo(() => {
     const query = patientQ.trim().toLowerCase();
-    const from = patientFromDate
-      ? new Date(patientFromDate + "T00:00:00Z").getTime()
-      : null;
-    const to = patientToDate
-      ? new Date(patientToDate + "T23:59:59Z").getTime()
-      : null;
+    const from = patientFromDate ? new Date(patientFromDate + "T00:00:00Z").getTime() : null;
+    const to = patientToDate ? new Date(patientToDate + "T23:59:59Z").getTime() : null;
 
     return patients.filter((p) => {
+      // text filter (based on checkboxes)
       if (query) {
-        const blob =
-          `${p.id} ${p.first_name} ${p.last_name} ${p.email ?? ""} ${p.phone ?? ""} ${p.dob ?? ""}`.toLowerCase();
+        const fields: string[] = [];
+
+        if (patientFilters.id) fields.push(p.id);
+        if (patientFilters.name) fields.push(`${p.first_name} ${p.last_name}`);
+        if (patientFilters.email) fields.push(p.email ?? "");
+        if (patientFilters.phone) fields.push(p.phone ?? "");
+        if (patientFilters.notes) fields.push(p.notes ?? "");
+
+        if (fields.length === 0) return false;
+
+        const blob = fields.join(" ").toLowerCase();
         if (!blob.includes(query)) return false;
       }
 
+      // created_at date range filter
       if (from || to) {
         const created = p.created_at ? new Date(p.created_at).getTime() : 0;
         if (from && created < from) return false;
@@ -109,24 +132,30 @@ export default function ClinicianDashboard() {
 
       return true;
     });
-  }, [patients, patientQ, patientFromDate, patientToDate]);
+  }, [patients, patientQ, patientFromDate, patientToDate, patientFilters]);
 
   const filteredAppointments = useMemo(() => {
     const query = apptQ.trim().toLowerCase();
-    const from = apptFromDate
-      ? new Date(apptFromDate + "T00:00:00Z").getTime()
-      : null;
-    const to = apptToDate
-      ? new Date(apptToDate + "T23:59:59Z").getTime()
-      : null;
+    const from = apptFromDate ? new Date(apptFromDate + "T00:00:00Z").getTime() : null;
+    const to = apptToDate ? new Date(apptToDate + "T23:59:59Z").getTime() : null;
 
     return appointments.filter((a) => {
-      // text filter
+      // text filter (based on checkboxes)
       if (query) {
         const p = patientsById.get(a.patient_id);
         const patientName = p ? `${p.first_name} ${p.last_name}` : "";
-        const blob =
-          `${a.id} ${a.patient_id} ${patientName} ${a.scheduled_at} ${a.status} ${a.reason ?? ""} ${a.clinician ?? ""}`.toLowerCase();
+
+        const fields: string[] = [];
+
+        if (apptFilters.patient) fields.push(patientName, a.patient_id);
+        if (apptFilters.clinician) fields.push(a.clinician ?? "");
+        if (apptFilters.status) fields.push(a.status ?? "");
+        if (apptFilters.date) fields.push(a.scheduled_at ?? "");
+        if (apptFilters.reason) fields.push(a.reason ?? "", a.notes ?? "");
+
+        if (fields.length === 0) return false;
+
+        const blob = fields.join(" ").toLowerCase();
         if (!blob.includes(query)) return false;
       }
 
@@ -140,7 +169,7 @@ export default function ClinicianDashboard() {
 
       return true;
     });
-  }, [appointments, apptQ, apptFromDate, apptToDate, patientsById]);
+  }, [appointments, apptQ, apptFromDate, apptToDate, patientsById, apptFilters]);
 
   async function addPatient() {
     setError("");
@@ -197,6 +226,11 @@ export default function ClinicianDashboard() {
 
   return (
     <Layout title="Clinician Dashboard">
+      {/* ✅ Notification bell row */}
+      <div className="mb-3 flex items-center justify-end">
+        <NotificationBell />
+      </div>
+
       <div className="space-y-6">
         {loading && (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
@@ -322,7 +356,7 @@ export default function ClinicianDashboard() {
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <input
               className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
-              placeholder="Search name, id, email, phone..."
+              placeholder="Search patients..."
               value={patientQ}
               onChange={(e) => setPatientQ(e.target.value)}
             />
@@ -340,6 +374,56 @@ export default function ClinicianDashboard() {
               value={patientToDate}
               onChange={(e) => setPatientToDate(e.target.value)}
             />
+          </div>
+
+          {/* ✅ Patients checkbox filters */}
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+            <span className="font-semibold">Filter by:</span>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={patientFilters.name}
+                onChange={(e) => setPatientFilters((s) => ({ ...s, name: e.target.checked }))}
+              />
+              Name
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={patientFilters.id}
+                onChange={(e) => setPatientFilters((s) => ({ ...s, id: e.target.checked }))}
+              />
+              ID
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={patientFilters.email}
+                onChange={(e) => setPatientFilters((s) => ({ ...s, email: e.target.checked }))}
+              />
+              Email
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={patientFilters.phone}
+                onChange={(e) => setPatientFilters((s) => ({ ...s, phone: e.target.checked }))}
+              />
+              Phone
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={patientFilters.notes}
+                onChange={(e) => setPatientFilters((s) => ({ ...s, notes: e.target.checked }))}
+              />
+              Notes
+            </label>
           </div>
 
           <div className="mt-4 overflow-x-auto">
@@ -406,6 +490,56 @@ export default function ClinicianDashboard() {
               value={apptToDate}
               onChange={(e) => setApptToDate(e.target.value)}
             />
+          </div>
+
+          {/* ✅ Appointments checkbox filters */}
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+            <span className="font-semibold">Filter by:</span>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={apptFilters.patient}
+                onChange={(e) => setApptFilters((s) => ({ ...s, patient: e.target.checked }))}
+              />
+              Patient
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={apptFilters.clinician}
+                onChange={(e) => setApptFilters((s) => ({ ...s, clinician: e.target.checked }))}
+              />
+              Clinician
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={apptFilters.status}
+                onChange={(e) => setApptFilters((s) => ({ ...s, status: e.target.checked }))}
+              />
+              Status
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={apptFilters.date}
+                onChange={(e) => setApptFilters((s) => ({ ...s, date: e.target.checked }))}
+              />
+              Date
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={apptFilters.reason}
+                onChange={(e) => setApptFilters((s) => ({ ...s, reason: e.target.checked }))}
+              />
+              Reason
+            </label>
           </div>
 
           <div className="mt-4 overflow-x-auto">
