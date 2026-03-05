@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "../components/Layout";
+import NotificationBell from "../components/NotificationBell";
 import { apiFetch } from "../api/client";
 import { registerUser } from "../api/auth";
 
@@ -45,6 +46,24 @@ export default function AdminDashboard() {
   const [patientSearch, setPatientSearch] = useState("");
   const [apptSearch, setApptSearch] = useState("");
 
+  // ✅ Patient checkbox filters
+  const [patientFilters, setPatientFilters] = useState({
+    name: true,
+    id: false,
+    email: false,
+    phone: false,
+    notes: false,
+  });
+
+  // ✅ Appointment checkbox filters
+  const [apptFilters, setApptFilters] = useState({
+    patient: true,
+    clinician: false,
+    status: false,
+    date: true,
+    reason: false,
+  });
+
   const patientsById = useMemo(() => {
     const map = new Map<string, Patient>();
     patients.forEach((p) => map.set(p.id, p));
@@ -69,11 +88,21 @@ export default function AdminDashboard() {
     if (!q) return recentPatientsPool.slice(0, 8);
 
     return recentPatientsPool.filter((p) => {
-      const blob =
-        `${p.id} ${p.first_name} ${p.last_name} ${p.email ?? ""} ${p.phone ?? ""}`.toLowerCase();
+      const fields: string[] = [];
+
+      if (patientFilters.id) fields.push(p.id);
+      if (patientFilters.name) fields.push(`${p.first_name} ${p.last_name}`);
+      if (patientFilters.email) fields.push(p.email ?? "");
+      if (patientFilters.phone) fields.push(p.phone ?? "");
+      if (patientFilters.notes) fields.push(p.notes ?? "");
+
+      // If somehow none are checked, no match
+      if (fields.length === 0) return false;
+
+      const blob = fields.join(" ").toLowerCase();
       return blob.includes(q);
     });
-  }, [recentPatientsPool, patientSearch]);
+  }, [recentPatientsPool, patientSearch, patientFilters]);
 
   const recentAppointmentsPool = useMemo(() => {
     return [...appointments]
@@ -92,13 +121,21 @@ export default function AdminDashboard() {
     return base.filter((a) => {
       const p = patientsById.get(a.patient_id);
       const patientName = p ? `${p.first_name} ${p.last_name}` : "";
-      const blob =
-        `${a.id} ${a.patient_id} ${patientName} ${a.scheduled_at} ${a.status} ${a.reason ?? ""} ${
-          a.clinician ?? ""
-        }`.toLowerCase();
+
+      const fields: string[] = [];
+
+      if (apptFilters.patient) fields.push(patientName, a.patient_id);
+      if (apptFilters.clinician) fields.push(a.clinician ?? "");
+      if (apptFilters.status) fields.push(a.status ?? "");
+      if (apptFilters.date) fields.push(a.scheduled_at ?? "");
+      if (apptFilters.reason) fields.push(a.reason ?? "", a.notes ?? "");
+
+      if (fields.length === 0) return false;
+
+      const blob = fields.join(" ").toLowerCase();
       return blob.includes(q);
     });
-  }, [recentAppointmentsPool, apptSearch, patientsById]);
+  }, [recentAppointmentsPool, apptSearch, patientsById, apptFilters]);
 
   async function load() {
     setLoading(true);
@@ -145,6 +182,11 @@ export default function AdminDashboard() {
 
   return (
     <Layout title="Admin Dashboard">
+      {/* ✅ Notification bell row */}
+      <div className="mb-3 flex items-center justify-end">
+        <NotificationBell />
+      </div>
+
       <div className="space-y-6">
         {loading && (
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
@@ -249,6 +291,56 @@ export default function AdminDashboard() {
             />
           </div>
 
+          {/* ✅ Patients filters */}
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+            <span className="font-semibold">Filter by:</span>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={patientFilters.name}
+                onChange={(e) => setPatientFilters((s) => ({ ...s, name: e.target.checked }))}
+              />
+              Name
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={patientFilters.id}
+                onChange={(e) => setPatientFilters((s) => ({ ...s, id: e.target.checked }))}
+              />
+              ID
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={patientFilters.email}
+                onChange={(e) => setPatientFilters((s) => ({ ...s, email: e.target.checked }))}
+              />
+              Email
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={patientFilters.phone}
+                onChange={(e) => setPatientFilters((s) => ({ ...s, phone: e.target.checked }))}
+              />
+              Phone
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={patientFilters.notes}
+                onChange={(e) => setPatientFilters((s) => ({ ...s, notes: e.target.checked }))}
+              />
+              Notes
+            </label>
+          </div>
+
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-slate-600 dark:text-slate-300">
@@ -299,6 +391,56 @@ export default function AdminDashboard() {
               value={apptSearch}
               onChange={(e) => setApptSearch(e.target.value)}
             />
+          </div>
+
+          {/* ✅ Appointments filters */}
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+            <span className="font-semibold">Filter by:</span>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={apptFilters.patient}
+                onChange={(e) => setApptFilters((s) => ({ ...s, patient: e.target.checked }))}
+              />
+              Patient
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={apptFilters.clinician}
+                onChange={(e) => setApptFilters((s) => ({ ...s, clinician: e.target.checked }))}
+              />
+              Clinician
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={apptFilters.status}
+                onChange={(e) => setApptFilters((s) => ({ ...s, status: e.target.checked }))}
+              />
+              Status
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={apptFilters.date}
+                onChange={(e) => setApptFilters((s) => ({ ...s, date: e.target.checked }))}
+              />
+              Date
+            </label>
+
+            <label className="flex items-center gap-1">
+              <input
+                type="checkbox"
+                checked={apptFilters.reason}
+                onChange={(e) => setApptFilters((s) => ({ ...s, reason: e.target.checked }))}
+              />
+              Reason
+            </label>
           </div>
 
           <div className="mt-4 overflow-x-auto">
