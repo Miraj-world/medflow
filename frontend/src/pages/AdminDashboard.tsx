@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "../components/Layout";
 import NotificationBell from "../components/NotificationBell";
+import HospitalAnalyticsPanel from "../components/HospitalAnalyticsPanel";
 import { apiFetch } from "../api/client";
 import { registerUser } from "../api/auth";
 
@@ -46,7 +47,7 @@ export default function AdminDashboard() {
   const [patientSearch, setPatientSearch] = useState("");
   const [apptSearch, setApptSearch] = useState("");
 
-  // ✅ Patient checkbox filters
+  // Patient checkbox filters
   const [patientFilters, setPatientFilters] = useState({
     name: true,
     id: false,
@@ -55,7 +56,7 @@ export default function AdminDashboard() {
     notes: false,
   });
 
-  // ✅ Appointment checkbox filters
+  // Appointment checkbox filters
   const [apptFilters, setApptFilters] = useState({
     patient: true,
     clinician: false,
@@ -182,7 +183,7 @@ export default function AdminDashboard() {
 
   return (
     <Layout title="Admin Dashboard">
-      {/* ✅ Notification bell row */}
+      {/* Notification bell row */}
       <div className="mb-3 flex items-center justify-end">
         <NotificationBell />
       </div>
@@ -223,6 +224,8 @@ export default function AdminDashboard() {
             <p className="mt-2 text-3xl font-semibold">{scheduledCount}</p>
           </div>
         </div>
+
+        <HospitalAnalyticsPanel />
 
         {/* Create account */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
@@ -291,7 +294,7 @@ export default function AdminDashboard() {
             />
           </div>
 
-          {/* ✅ Patients filters */}
+          {/* Patients filters */}
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
             <span className="font-semibold">Filter by:</span>
 
@@ -393,7 +396,7 @@ export default function AdminDashboard() {
             />
           </div>
 
-          {/* ✅ Appointments filters */}
+          {/* Appointments filters */}
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
             <span className="font-semibold">Filter by:</span>
 
@@ -489,3 +492,4 @@ export default function AdminDashboard() {
     </Layout>
   );
 }
+

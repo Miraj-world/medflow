@@ -31,6 +31,19 @@ function toDateOnly(isoOrDate: string) {
   return isoOrDate.slice(0, 10);
 }
 
+function localDateTimeToIso(localDateTime: string): string | null {
+  if (!localDateTime) return null;
+  const parsed = new Date(localDateTime);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
+}
+
+function formatScheduledAt(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString();
+}
+
 export default function ClinicianDashboard() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -47,7 +60,7 @@ export default function ClinicianDashboard() {
   const [apptFromDate, setApptFromDate] = useState(""); // YYYY-MM-DD
   const [apptToDate, setApptToDate] = useState(""); // YYYY-MM-DD
 
-  // ✅ Patient search checkbox filters
+  // Patient search checkbox filters
   const [patientFilters, setPatientFilters] = useState({
     name: true,
     id: false,
@@ -56,7 +69,7 @@ export default function ClinicianDashboard() {
     notes: false,
   });
 
-  // ✅ Appointment search checkbox filters
+  // Appointment search checkbox filters
   const [apptFilters, setApptFilters] = useState({
     patient: true,
     clinician: false,
@@ -205,13 +218,15 @@ export default function ClinicianDashboard() {
     setError("");
     try {
       if (!apptPatientId) throw new Error("Select a patient");
-      if (!scheduledAt.trim()) throw new Error("Scheduled time is required");
+
+      const scheduledAtIso = localDateTimeToIso(scheduledAt);
+      if (!scheduledAtIso) throw new Error("Pick a valid scheduled date and time");
 
       await apiFetch("/appointments", {
         method: "POST",
         body: JSON.stringify({
           patient_id: apptPatientId,
-          scheduled_at: scheduledAt.trim(),
+          scheduled_at: scheduledAtIso,
           reason: reason.trim() || null,
         }),
       });
@@ -226,7 +241,7 @@ export default function ClinicianDashboard() {
 
   return (
     <Layout title="Clinician Dashboard">
-      {/* ✅ Notification bell row */}
+      {/* Notification bell row */}
       <div className="mb-3 flex items-center justify-end">
         <NotificationBell />
       </div>
@@ -263,10 +278,11 @@ export default function ClinicianDashboard() {
                 onChange={(e) => setLastName(e.target.value)}
               />
               <input
+                type="date"
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
-                placeholder="DOB (YYYY-MM-DD)"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
+                aria-label="Date of birth"
               />
               <input
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
@@ -309,10 +325,11 @@ export default function ClinicianDashboard() {
               </select>
 
               <input
+                type="datetime-local"
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
-                placeholder="Scheduled at (e.g., 2026-03-02T15:30:00Z) *"
                 value={scheduledAt}
                 onChange={(e) => setScheduledAt(e.target.value)}
+                aria-label="Scheduled date and time"
               />
 
               <input
@@ -376,7 +393,7 @@ export default function ClinicianDashboard() {
             />
           </div>
 
-          {/* ✅ Patients checkbox filters */}
+          {/* Patients checkbox filters */}
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
             <span className="font-semibold">Filter by:</span>
 
@@ -492,7 +509,7 @@ export default function ClinicianDashboard() {
             />
           </div>
 
-          {/* ✅ Appointments checkbox filters */}
+          {/* Appointments checkbox filters */}
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
             <span className="font-semibold">Filter by:</span>
 
@@ -559,7 +576,7 @@ export default function ClinicianDashboard() {
 
                   return (
                     <tr key={a.id} className="border-t border-slate-100 dark:border-slate-700">
-                      <td className="py-2 pr-4">{a.scheduled_at}</td>
+                      <td className="py-2 pr-4">{formatScheduledAt(a.scheduled_at)}</td>
                       <td className="py-2 pr-4">{patientLabel}</td>
                       <td className="py-2 pr-4">{a.status}</td>
                       <td className="py-2 pr-4">{a.reason ?? "-"}</td>

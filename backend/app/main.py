@@ -1,21 +1,22 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.db import users, save_users
-from app.auth import verify_password, hash_password, create_access_token, decode_token
+from app.admin import router as admin_router
+from app.analytics import router as analytics_router
+from app.appointments import router as appointments_router
+from app.auth import create_access_token, decode_token, hash_password, verify_password
+from app.db import save_users, users
+from app.hospital_data import router as hospital_data_router
 from app.models import (
     LoginRequest,
     LoginResponse,
+    MeResponse,
     RegisterRequest,
     RegisterResponse,
-    MeResponse,
 )
-
+from app.notifications_api import router as notifications_router
 from app.patients import router as patients_router
-from app.appointments import router as appointments_router
-from app.admin import router as admin_router
-from app.notifications_api import router as notifications_router  
 
 app = FastAPI(title="Healthcare Platform API")
 
@@ -107,4 +108,6 @@ def me(user=Depends(get_current_user)):
 app.include_router(patients_router)
 app.include_router(appointments_router)
 app.include_router(admin_router)
-app.include_router(notifications_router)  
+app.include_router(notifications_router)
+app.include_router(hospital_data_router)
+app.include_router(analytics_router)
