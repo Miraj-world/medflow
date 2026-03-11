@@ -1,15 +1,19 @@
-﻿from __future__ import annotations
+"""
+Fernet-based field-level encryption for sensitive medical data.
+Reads ENCRYPTION_KEY from environment / .env file.
+"""
+from __future__ import annotations
 
 import os
 from pathlib import Path
 
 from cryptography.fernet import Fernet, InvalidToken
 
-BASE_DIR = Path(__file__).resolve().parents[1]
+BASE_DIR = Path(__file__).resolve().parents[2]  # backend/
 DATA_DIR = BASE_DIR / "data"
 KEY_FILE = DATA_DIR / ".medflow_encryption.key"
 ENV_PATH = BASE_DIR / ".env"
-KEY_NAME = "MEDFLOW_ENCRYPTION_KEY"
+KEY_NAME = "ENCRYPTION_KEY"
 
 _cached_fernet: Fernet | None = None
 
@@ -17,7 +21,6 @@ _cached_fernet: Fernet | None = None
 def _read_key_from_env_file() -> str | None:
     if not ENV_PATH.exists():
         return None
-
     for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
         row = line.strip()
         if not row or row.startswith("#") or "=" not in row:
@@ -25,7 +28,6 @@ def _read_key_from_env_file() -> str | None:
         key, value = row.split("=", 1)
         if key.strip() == KEY_NAME:
             return value.strip().strip('"').strip("'")
-
     return None
 
 

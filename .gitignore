@@ -1,0 +1,12 @@
+# Python cache and virtual envs
+__pycache__/
+*.py[cod]
+venv/
+
+# Local logs
+*.log
+start_log.txt
+
+# Node dependencies
+frontend/node_modules/
+backend/node_modules/

@@ -109,9 +109,9 @@ export default function HospitalAnalyticsPanel() {
         <div className="h-72 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
           <p className="mb-3 text-sm font-medium text-slate-600 dark:text-slate-300">Procedure Cost Analysis</p>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={procedureData} margin={{ top: 10, right: 20, left: 0, bottom: 35 }}>
+            <BarChart data={procedureData} margin={{ top: 10, right: 20, left: 0, bottom: 80 }}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="procedure" angle={-15} textAnchor="end" interval={0} height={70} />
+              <XAxis dataKey="procedure" angle={-45} textAnchor="end" interval={0} height={100} tick={{ fontSize: 11 }} />
               <YAxis />
               <Tooltip
                 formatter={(value: number, name: string) => {

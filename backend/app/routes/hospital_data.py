@@ -4,9 +4,9 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from .auth import get_current_user
-from .data_encryption import try_decrypt_text
-from .storage import load_json
+from app.deps import get_current_user
+from app.utils.data_encryption import try_decrypt_text
+from app.storage import load_json
 
 router = APIRouter(prefix="/hospital-data", tags=["hospital-data"])
 
