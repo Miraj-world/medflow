@@ -1,12 +1,26 @@
-# Python cache and virtual envs
+# Python
 __pycache__/
 *.py[cod]
+*.pyo
+.venv/
 venv/
+*.egg-info/
 
-# Local logs
-*.log
-start_log.txt
+# Environment
+.env
 
-# Node dependencies
-frontend/node_modules/
-backend/node_modules/
+# SQLite database
+medflow.db
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+dist/

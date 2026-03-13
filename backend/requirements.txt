@@ -4,7 +4,9 @@ python-jose[cryptography]
 passlib[bcrypt]
 pydantic
 sqlalchemy
-psycopg2-binary
 python-dotenv
 alembic
 cryptography
+
+# Optional: uncomment for PostgreSQL in production
+# psycopg2-binary
