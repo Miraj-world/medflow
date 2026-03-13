@@ -8,5 +8,5 @@ python-dotenv
 alembic
 cryptography
 
-# Optional: uncomment for PostgreSQL in production
-# psycopg2-binary
+# PostgreSQL driver (used by Railway in production, ignored locally with SQLite)
+psycopg2-binary

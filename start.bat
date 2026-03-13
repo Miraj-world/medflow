@@ -73,6 +73,16 @@ if not exist ".venv\Scripts\python.exe" (
   call :die "Venv python missing. Delete backend\.venv and rerun."
 )
 
+REM Create .env from .env.example if missing (SQLite default – no DB install needed)
+if not exist ".env" (
+  if exist ".env.example" (
+    call :log "[BACKEND] Creating .env from .env.example..."
+    copy ".env.example" ".env" >> "%LOG%" 2>&1
+  ) else (
+    call :log "[BACKEND] No .env or .env.example found – app will use SQLite defaults."
+  )
+)
+
 call :log "[BACKEND] Installing deps (pip)..."
 call ".venv\Scripts\python.exe" -m pip install -r requirements.txt >> "%LOG%" 2>&1
 if !errorlevel! neq 0 (
