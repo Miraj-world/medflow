@@ -44,9 +44,13 @@ http://localhost:5173
 
 ## Backend Requirement
 
-The frontend expects the backend server to be running at:
+By default, the frontend uses the Railway backend:
 
-http://127.0.0.1:8000
+https://medflow-production-9424.up.railway.app
+
+To use a local backend instead, create `frontend/.env` with:
+
+VITE_API_URL=http://localhost:8000
 
 CORS is configured in the backend to allow requests from:
 

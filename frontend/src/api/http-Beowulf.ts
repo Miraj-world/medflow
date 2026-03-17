@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL =
+  import.meta.env.VITE_API_URL || "https://medflow-production-9424.up.railway.app";
 
 export function getToken(): string | null {
   return localStorage.getItem("token");

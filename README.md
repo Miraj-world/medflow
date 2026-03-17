@@ -19,14 +19,12 @@ This application provides user registration and login functionality with role-ba
 
 1. Double-click `start.bat`
 2. The script will:
-   - Create a backend virtual environment (if missing)
-   - Install backend dependencies
+   - Configure the frontend to use the Railway backend
    - Install frontend dependencies
-   - Launch the backend server
    - Launch the frontend development server
 
-Backend:
-http://127.0.0.1:8000
+Backend (default):
+https://medflow-production-9424.up.railway.app
 
 Frontend:
 http://localhost:5173
@@ -36,6 +34,12 @@ http://localhost:5173
 ## Manual Setup (Optional)
 
 If not using `start.bat`, you may run the servers manually.
+
+### Run Local Backend (Optional)
+
+To run the local backend + frontend, use:
+
+start.bat local
 
 ### Backend
 
@@ -52,6 +56,11 @@ From the `frontend` folder:
 
 npm install
 npm run dev
+
+By default the frontend calls the Railway backend. To use a local backend,
+create `frontend/.env` with:
+
+VITE_API_URL=http://localhost:8000
 
 ---
 
