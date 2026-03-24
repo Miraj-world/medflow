@@ -21,7 +21,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     username = req.username.strip().lower()
     db_user = db.query(User).filter(User.username == username).first()
 
-    if not db_user or not verify_password(req.password, db_user.hashed_password):
+    if not db_user or not verify_password(req.password, db_user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     token = create_access_token({"sub": db_user.username, "role": db_user.role})
@@ -47,7 +47,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
 
     new_user = User(
         username=username,
-        hashed_password=hash_password(req.password),
+        password_hash=hash_password(req.password),
         role=role,
         theme="system",
     )

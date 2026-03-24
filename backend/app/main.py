@@ -1,8 +1,13 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import engine, Base
-from app.models import User, Patient, Appointment  # noqa: F401 — registers models with Base
+from app.database import Base, SessionLocal, engine
+from app.models.appointment import Appointment  # noqa: F401
+from app.models.patient import Patient  # noqa: F401
+from app.models.user import User  # noqa: F401
+from app.utils.security import hash_password
 
 from app.routes.auth import router as auth_router
 from app.routes.patients import router as patients_router
@@ -17,13 +22,53 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Healthcare Platform API")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+def _seed_admin() -> None:
+    username = os.getenv("ADMIN_USERNAME", "").strip().lower()
+    password = os.getenv("ADMIN_PASSWORD", "")
+    if not username or not password:
+        return
+
+    db = SessionLocal()
+    try:
+        db_user = db.query(User).filter(User.username == username).first()
+        if db_user:
+            db_user.password_hash = hash_password(password)
+            db_user.role = "admin"
+            if not db_user.theme:
+                db_user.theme = "system"
+        else:
+            db.add(
+                User(
+                    username=username,
+                    password_hash=hash_password(password),
+                    role="admin",
+                    theme="system",
+                )
+            )
+        db.commit()
+    finally:
+        db.close()
+
+
+@app.on_event("startup")
+def _startup_seed_admin() -> None:
+    _seed_admin()
 
 
 @app.get("/health")

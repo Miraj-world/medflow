@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date
 from typing import Any, Dict, List, Optional
-from uuid import uuid4
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -39,8 +39,23 @@ def _require_staff(user: Dict[str, Any]) -> None:
         )
 
 
-def _now_iso() -> str:
-    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+def _parse_uuid(value: str, field: str) -> UUID:
+    try:
+        return UUID(value)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid {field}") from exc
+
+
+def _parse_date(value: Optional[str], field: str) -> Optional[date]:
+    if value is None or value == "":
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid {field}. Expected YYYY-MM-DD.",
+        ) from exc
 
 
 @router.get("/", response_model=List[PatientOut])
@@ -52,7 +67,8 @@ def list_patients(user: Dict[str, Any] = Depends(get_current_user), db: Session 
 @router.get("/{patient_id}", response_model=PatientOut)
 def get_patient(patient_id: str, user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
     _require_staff(user)
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    patient_uuid = _parse_uuid(patient_id, "patient_id")
+    patient = db.query(Patient).filter(Patient.id == patient_uuid).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     return patient
@@ -61,16 +77,15 @@ def get_patient(patient_id: str, user: Dict[str, Any] = Depends(get_current_user
 @router.post("/", response_model=PatientOut, status_code=201)
 def create_patient(payload: PatientIn, user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
     _require_staff(user)
+    dob = _parse_date(payload.dob, "dob")
     new_patient = Patient(
-        id=str(uuid4()),
         first_name=payload.first_name,
         last_name=payload.last_name,
-        dob=payload.dob,
+        dob=dob,
         phone=payload.phone,
         email=payload.email,
         address=payload.address,
         notes=payload.notes,
-        created_at=_now_iso()
     )
     db.add(new_patient)
     db.commit()
@@ -86,13 +101,14 @@ def update_patient(
     db: Session = Depends(get_db)
 ):
     _require_staff(user)
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    patient_uuid = _parse_uuid(patient_id, "patient_id")
+    patient = db.query(Patient).filter(Patient.id == patient_uuid).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
     patient.first_name = payload.first_name
     patient.last_name = payload.last_name
-    patient.dob = payload.dob
+    patient.dob = _parse_date(payload.dob, "dob")
     patient.phone = payload.phone
     patient.email = payload.email
     patient.address = payload.address
@@ -106,7 +122,8 @@ def update_patient(
 @router.delete("/{patient_id}", status_code=204)
 def delete_patient(patient_id: str, user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
     _require_staff(user)
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    patient_uuid = _parse_uuid(patient_id, "patient_id")
+    patient = db.query(Patient).filter(Patient.id == patient_uuid).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 

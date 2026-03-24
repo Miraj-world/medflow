@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from uuid import uuid4
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -38,8 +38,21 @@ def _require_staff(user: Dict[str, Any]) -> None:
         )
 
 
-def _now_iso() -> str:
-    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+def _parse_uuid(value: str, field: str) -> UUID:
+    try:
+        return UUID(value)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid {field}") from exc
+
+
+def _parse_datetime(value: str, field: str) -> datetime:
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid {field}. Expected ISO 8601 datetime.",
+        ) from exc
 
 
 @router.get("/", response_model=List[AppointmentOut])
@@ -51,7 +64,8 @@ def list_appointments(user: Dict[str, Any] = Depends(get_current_user), db: Sess
 @router.get("/{appointment_id}", response_model=AppointmentOut)
 def get_appointment(appointment_id: str, user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
     _require_staff(user)
-    appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+    appointment_uuid = _parse_uuid(appointment_id, "appointment_id")
+    appointment = db.query(Appointment).filter(Appointment.id == appointment_uuid).first()
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
     return appointment
@@ -60,15 +74,15 @@ def get_appointment(appointment_id: str, user: Dict[str, Any] = Depends(get_curr
 @router.post("/", response_model=AppointmentOut, status_code=201)
 def create_appointment(payload: AppointmentIn, user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
     _require_staff(user)
+    patient_uuid = _parse_uuid(payload.patient_id, "patient_id")
+    scheduled_at = _parse_datetime(payload.scheduled_at, "scheduled_at")
     new_appt = Appointment(
-        id=str(uuid4()),
-        patient_id=payload.patient_id,
+        patient_id=patient_uuid,
         clinician=payload.clinician,
-        scheduled_at=payload.scheduled_at,
+        scheduled_at=scheduled_at,
         reason=payload.reason,
         status=payload.status,
         notes=payload.notes,
-        created_at=_now_iso()
     )
     db.add(new_appt)
     db.commit()
@@ -84,13 +98,14 @@ def update_appointment(
     db: Session = Depends(get_db)
 ):
     _require_staff(user)
-    appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+    appointment_uuid = _parse_uuid(appointment_id, "appointment_id")
+    appointment = db.query(Appointment).filter(Appointment.id == appointment_uuid).first()
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
-    appointment.patient_id = payload.patient_id
+    appointment.patient_id = _parse_uuid(payload.patient_id, "patient_id")
     appointment.clinician = payload.clinician
-    appointment.scheduled_at = payload.scheduled_at
+    appointment.scheduled_at = _parse_datetime(payload.scheduled_at, "scheduled_at")
     appointment.reason = payload.reason
     appointment.status = payload.status
     appointment.notes = payload.notes
@@ -103,7 +118,8 @@ def update_appointment(
 @router.delete("/{appointment_id}", status_code=204)
 def delete_appointment(appointment_id: str, user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
     _require_staff(user)
-    appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+    appointment_uuid = _parse_uuid(appointment_id, "appointment_id")
+    appointment = db.query(Appointment).filter(Appointment.id == appointment_uuid).first()
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
 

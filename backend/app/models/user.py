@@ -1,12 +1,16 @@
-from sqlalchemy import Column, Integer, String
+import uuid
+
+from sqlalchemy import Column, DateTime, Text, Uuid, func
+
 from app.database import Base
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    role = Column(String, nullable=False)  # admin, clinician, patient
-    theme = Column(String, default="system")
+    id = Column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    username = Column(Text, unique=True, index=True, nullable=False)
+    password_hash = Column("password_hash", Text, nullable=False)
+    role = Column(Text, nullable=False, default="patient")  # admin, clinician, patient
+    theme = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

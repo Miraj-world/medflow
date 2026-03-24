@@ -75,20 +75,13 @@ export default function AdminDashboard() {
     return appointments.filter((a) => (a.status || "").toLowerCase() === "scheduled").length;
   }, [appointments]);
 
-  // Keep a bigger pool so searching feels useful, but not huge UI
-  const recentPatientsPool = useMemo(() => {
-    return [...patients]
-      .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
-      .slice(0, 50);
-  }, [patients]);
-
   const filteredPatients = useMemo(() => {
     const q = patientSearch.trim().toLowerCase();
 
-    // Default (no search): show 8 most recent
-    if (!q) return recentPatientsPool.slice(0, 8);
+    // Default (no search): show all
+    if (!q) return patients;
 
-    return recentPatientsPool.filter((p) => {
+    return patients.filter((p) => {
       const fields: string[] = [];
 
       if (patientFilters.id) fields.push(p.id);
@@ -103,19 +96,13 @@ export default function AdminDashboard() {
       const blob = fields.join(" ").toLowerCase();
       return blob.includes(q);
     });
-  }, [recentPatientsPool, patientSearch, patientFilters]);
-
-  const recentAppointmentsPool = useMemo(() => {
-    return [...appointments]
-      .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
-      .slice(0, 50);
-  }, [appointments]);
+  }, [patients, patientSearch, patientFilters]);
 
   const filteredAppointments = useMemo(() => {
     const q = apptSearch.trim().toLowerCase();
 
-    // Default (no search): show 8 most recent appointments
-    const base = !q ? recentAppointmentsPool.slice(0, 8) : recentAppointmentsPool;
+    // Default (no search): show all appointments
+    const base = !q ? appointments : appointments;
 
     if (!q) return base;
 
@@ -136,17 +123,34 @@ export default function AdminDashboard() {
       const blob = fields.join(" ").toLowerCase();
       return blob.includes(q);
     });
-  }, [recentAppointmentsPool, apptSearch, patientsById, apptFilters]);
+  }, [appointments, apptSearch, patientsById, apptFilters]);
 
   async function load() {
     setLoading(true);
     setError("");
     try {
-      const [p, a] = await Promise.all([apiFetch("/patients"), apiFetch("/appointments")]);
-      setPatients(p as Patient[]);
-      setAppointments(a as Appointment[]);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load admin data");
+      const [patientsRes, apptsRes] = await Promise.allSettled([
+        apiFetch("/patients"),
+        apiFetch("/appointments"),
+      ]);
+
+      const errors: string[] = [];
+
+      if (patientsRes.status === "fulfilled") {
+        setPatients(patientsRes.value as Patient[]);
+      } else {
+        errors.push(patientsRes.reason?.message || "Failed to load patients");
+      }
+
+      if (apptsRes.status === "fulfilled") {
+        setAppointments(apptsRes.value as Appointment[]);
+      } else {
+        errors.push(apptsRes.reason?.message || "Failed to load appointments");
+      }
+
+      if (errors.length) {
+        setError(errors.join(" | "));
+      }
     } finally {
       setLoading(false);
     }
@@ -277,7 +281,8 @@ export default function AdminDashboard() {
           </div>
 
           <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-            This uses the backend registration endpoint. Accounts persist in <code>backend/data/users.json</code>.
+            This uses the backend registration endpoint. Accounts are stored in the primary database. Admin access can
+            also be bootstrapped via <code>ADMIN_USERNAME</code> and <code>ADMIN_PASSWORD</code>.
           </p>
         </div>
 
@@ -376,11 +381,6 @@ export default function AdminDashboard() {
             </table>
           </div>
 
-          {!patientSearch.trim() && (
-            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-              Showing the 8 most recent patients. Use search to view more.
-            </p>
-          )}
         </div>
 
         {/* Appointments + Search */}
@@ -482,11 +482,6 @@ export default function AdminDashboard() {
             </table>
           </div>
 
-          {!apptSearch.trim() && (
-            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-              Showing the 8 most recent appointments. Use search to view more.
-            </p>
-          )}
         </div>
       </div>
     </Layout>

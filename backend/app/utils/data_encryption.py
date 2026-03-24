@@ -31,37 +31,47 @@ def _read_key_from_env_file() -> str | None:
     return None
 
 
-def _load_key() -> bytes:
+def _load_key() -> bytes | None:
     env_key = os.getenv(KEY_NAME) or _read_key_from_env_file()
     if env_key:
         return env_key.encode("utf-8")
 
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
     if KEY_FILE.exists():
         return KEY_FILE.read_bytes().strip()
 
-    key = Fernet.generate_key()
-    KEY_FILE.write_bytes(key)
-    return key
+    # No key available (Railway filesystems can be read-only).
+    return None
 
 
-def _get_fernet() -> Fernet:
+def _get_fernet() -> Fernet | None:
     global _cached_fernet
     if _cached_fernet is None:
-        _cached_fernet = Fernet(_load_key())
+        key = _load_key()
+        if not key:
+            return None
+        _cached_fernet = Fernet(key)
     return _cached_fernet
 
 
 def encrypt_text(value: str) -> str:
-    return _get_fernet().encrypt(value.encode("utf-8")).decode("utf-8")
+    fernet = _get_fernet()
+    if not fernet:
+        raise RuntimeError("ENCRYPTION_KEY is not configured")
+    return fernet.encrypt(value.encode("utf-8")).decode("utf-8")
 
 
 def decrypt_text(value: str) -> str:
-    return _get_fernet().decrypt(value.encode("utf-8")).decode("utf-8")
+    fernet = _get_fernet()
+    if not fernet:
+        raise RuntimeError("ENCRYPTION_KEY is not configured")
+    return fernet.decrypt(value.encode("utf-8")).decode("utf-8")
 
 
 def try_decrypt_text(value: str) -> str:
     try:
-        return decrypt_text(value)
+        fernet = _get_fernet()
+        if not fernet:
+            return value
+        return fernet.decrypt(value.encode("utf-8")).decode("utf-8")
     except (InvalidToken, ValueError, TypeError):
         return value
