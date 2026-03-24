@@ -1,45 +1,75 @@
-from fastapi import FastAPI, HTTPException, Depends
+import os
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from app.db import users, save_users
-from app.auth import verify_password, hash_password, create_access_token, decode_token
-from app.models import (
-    LoginRequest,
-    LoginResponse,
-    RegisterRequest,
-    RegisterResponse,
-    MeResponse,
-)
+from app.database import Base, SessionLocal, engine
+from app.models.appointment import Appointment  # noqa: F401
+from app.models.notification import Notification  # noqa: F401
+from app.models.patient import Patient  # noqa: F401
+from app.models.user import User  # noqa: F401
+from app.utils.security import hash_password
 
-from app.patients import router as patients_router
-from app.appointments import router as appointments_router
-from app.admin import router as admin_router
-from app.notifications_api import router as notifications_router  
+from app.routes.auth import router as auth_router
+from app.routes.patients import router as patients_router
+from app.routes.appointments import router as appointments_router
+from app.routes.admin import router as admin_router
+from app.routes.notifications import router as notifications_router
+from app.routes.hospital_data import router as hospital_data_router
+from app.routes.analytics import router as analytics_router
+
+# Create tables if they don't exist (Alembic will take over later)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Healthcare Platform API")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
 
-security = HTTPBearer()
+if cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
-def get_current_user(creds: HTTPAuthorizationCredentials = Depends(security)):
-    token = creds.credentials
+def _seed_admin() -> None:
+    username = os.getenv("ADMIN_USERNAME", "").strip().lower()
+    password = os.getenv("ADMIN_PASSWORD", "")
+    if not username or not password:
+        return
+
+    db = SessionLocal()
     try:
-        payload = decode_token(token)
-        username = payload.get("sub")
-        if not username or username not in users:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        return users[username]
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        db_user = db.query(User).filter(User.username == username).first()
+        if db_user:
+            db_user.password_hash = hash_password(password)
+            db_user.role = "admin"
+            if not db_user.theme:
+                db_user.theme = "system"
+        else:
+            db.add(
+                User(
+                    username=username,
+                    password_hash=hash_password(password),
+                    role="admin",
+                    theme="system",
+                )
+            )
+        db.commit()
+    finally:
+        db.close()
+
+
+@app.on_event("startup")
+def _startup_seed_admin() -> None:
+    _seed_admin()
 
 
 @app.get("/health")
@@ -47,64 +77,10 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/auth/login", response_model=LoginResponse)
-def login(req: LoginRequest):
-    username = req.username.strip().lower()
-    user = users.get(username)
-
-    if not user or not verify_password(req.password, user["hashed_password"]):
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-
-    token = create_access_token({"sub": user["username"], "role": user["role"]})
-    return LoginResponse(
-        access_token=token,
-        role=user["role"],
-        theme=user.get("theme", "system"),
-    )
-
-
-@app.post("/auth/register", response_model=RegisterResponse)
-def register(req: RegisterRequest):
-    username = req.username.strip().lower()
-
-    allowed_roles = {"admin", "clinician", "patient"}
-    role = req.role.strip().lower()
-    if role not in allowed_roles:
-        raise HTTPException(status_code=400, detail="Invalid role")
-
-    if username in users:
-        raise HTTPException(status_code=409, detail="Username already exists")
-
-    users[username] = {
-        "username": username,
-        "hashed_password": hash_password(req.password),
-        "role": role,
-        "theme": "system",
-    }
-
-    save_users(users)
-
-    return RegisterResponse(username=username, role=role)
-
-
-@app.patch("/users/theme")
-def update_theme(mode: str, user=Depends(get_current_user)):
-    allowed = {"light", "dark", "system"}
-    if mode not in allowed:
-        raise HTTPException(status_code=400, detail="Invalid theme")
-
-    users[user["username"]]["theme"] = mode
-    save_users(users)
-
-    return {"theme": mode}
-
-
-@app.get("/me", response_model=MeResponse)
-def me(user=Depends(get_current_user)):
-    return MeResponse(username=user["username"], role=user["role"])
-
-
+app.include_router(auth_router)
 app.include_router(patients_router)
 app.include_router(appointments_router)
 app.include_router(admin_router)
-app.include_router(notifications_router)  
+app.include_router(notifications_router)
+app.include_router(hospital_data_router)
+app.include_router(analytics_router)

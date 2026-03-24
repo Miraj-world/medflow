@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { apiFetch } from "../api/client";
+import {
+  listNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from "../api/notifications";
 
 type NotificationItem = {
   id: string;
@@ -7,41 +11,72 @@ type NotificationItem = {
   message: string;
   timestamp: string;
   read: boolean;
+  recipient_username?: string | null;
+  recipient_role?: string | null;
+  type?: string | null;
+  entity_type?: string | null;
+  entity_id?: string | null;
+  created_by?: string | null;
 };
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [markingId, setMarkingId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   const unreadCount = useMemo(() => items.filter((n) => !n.read).length, [items]);
 
   async function loadNotifications() {
-    setLoading(true);
     try {
-      const data = await apiFetch("/notifications/");
-      setItems(Array.isArray(data) ? (data as NotificationItem[]) : []);
+      const data = await listNotifications();
+      const nextItems = Array.isArray(data) ? (data as NotificationItem[]) : [];
+      setItems(nextItems);
     } catch {
       setItems([]);
+    }
+  }
+
+  async function handleOpenToggle() {
+    const nextOpen = !open;
+    setOpen(nextOpen);
+    if (nextOpen) {
+      setLoading(true);
+      await loadNotifications();
+      setLoading(false);
+    }
+  }
+
+  async function handleMarkAllRead() {
+    setLoading(true);
+    try {
+      await markAllNotificationsRead();
+      await loadNotifications();
     } finally {
       setLoading(false);
     }
   }
 
-  async function markAllRead() {
+  async function handleMarkRead(id: string) {
+    setMarkingId(id);
     try {
-      await apiFetch("/notifications/mark-all-read", { method: "POST" });
+      await markNotificationRead(id);
       await loadNotifications();
-    } catch {
-      // ignore
+    } finally {
+      setMarkingId(null);
     }
   }
 
   useEffect(() => {
-    if (open) loadNotifications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    loadNotifications();
+
+    const interval = setInterval(() => {
+      loadNotifications();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -50,6 +85,7 @@ export default function NotificationBell() {
         setOpen(false);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
@@ -58,26 +94,29 @@ export default function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-sky-800"
+        onClick={handleOpenToggle}
+        className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-300 text-lg hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-sky-800"
         aria-label="Notifications"
         title="Notifications"
       >
-        <span>Notifications</span>
+        <span role="img" aria-hidden="true">
+          🔔
+        </span>
+
         {unreadCount > 0 && (
-          <span className="inline-flex min-w-[22px] items-center justify-center rounded-full border border-slate-300 px-2 text-xs font-semibold dark:border-slate-600">
+          <span className="absolute -right-1 -top-1 inline-flex min-w-[20px] items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
             {unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 z-50 w-[340px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-sky-950">
+        <div className="absolute right-0 top-14 z-50 w-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-sky-950">
           <div className="flex items-center justify-between gap-3 p-3">
             <div className="font-semibold">Notifications</div>
             <button
               type="button"
-              onClick={markAllRead}
+              onClick={handleMarkAllRead}
               disabled={!items.length || loading}
               className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs hover:bg-slate-100 disabled:opacity-50 dark:border-slate-600 dark:hover:bg-sky-900"
             >
@@ -94,18 +133,38 @@ export default function NotificationBell() {
           ) : (
             <div className="max-h-[360px] overflow-auto">
               {items.slice(0, 10).map((n) => (
-                <div
+                <button
                   key={n.id}
-                  className={`border-b border-slate-100 p-3 text-sm dark:border-slate-800 ${
+                  type="button"
+                  onClick={() => !n.read && handleMarkRead(n.id)}
+                  disabled={markingId === n.id}
+                  className={`block w-full border-b border-slate-100 p-3 text-left text-sm dark:border-slate-800 ${
                     n.read ? "" : "bg-sky-50 dark:bg-sky-900/40"
-                  }`}
+                  } ${!n.read ? "hover:bg-sky-100 dark:hover:bg-sky-900/60" : ""} disabled:opacity-50`}
                 >
-                  <div className="font-semibold">{n.title}</div>
-                  <div className="text-slate-700 dark:text-slate-200">{n.message}</div>
-                  <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                    {new Date(n.timestamp).toLocaleString()}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="font-semibold">{n.title}</div>
+                    {!n.read && (
+                      <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                        New
+                      </span>
+                    )}
                   </div>
-                </div>
+
+                  <div className="mt-1 text-slate-700 dark:text-slate-200">{n.message}</div>
+
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                      {new Date(n.timestamp).toLocaleString()}
+                    </div>
+
+                    {!n.read && (
+                      <div className="text-xs text-sky-700 dark:text-sky-300">
+                        {markingId === n.id ? "Marking..." : "Click to mark read"}
+                      </div>
+                    )}
+                  </div>
+                </button>
               ))}
             </div>
           )}

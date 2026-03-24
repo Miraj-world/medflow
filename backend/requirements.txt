@@ -3,3 +3,10 @@ uvicorn[standard]
 python-jose[cryptography]
 passlib[bcrypt]
 pydantic
+sqlalchemy
+python-dotenv
+alembic
+cryptography
+
+# PostgreSQL driver (used by Railway in production, ignored locally with SQLite)
+psycopg2-binary

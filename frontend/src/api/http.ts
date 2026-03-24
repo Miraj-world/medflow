@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL =
+  import.meta.env.VITE_API_URL || "https://medflow-production-9424.up.railway.app";
 
 export function getToken(): string | null {
   return localStorage.getItem("token");
@@ -55,5 +56,6 @@ export const http = {
     request<T>(path, { method: "PUT", body: JSON.stringify(body ?? {}) }),
   patch: <T>(path: string, body?: any) =>
     request<T>(path, { method: "PATCH", body: JSON.stringify(body ?? {}) }),
-  del: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+del: <T>(path: string, body?: any) =>
+  request<T>(path, { method: "DELETE", body: JSON.stringify(body ?? {}) }),
 };

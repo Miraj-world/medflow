@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import Layout from "../components/Layout";
 import NotificationBell from "../components/NotificationBell";
 import { apiFetch } from "../api/client";
+import { deleteAppointment } from "../api/appointments";
+import { deletePatient } from "../api/patients";
 
 type Patient = {
   id: string;
@@ -31,23 +33,39 @@ function toDateOnly(isoOrDate: string) {
   return isoOrDate.slice(0, 10);
 }
 
+function localDateTimeToIso(localDateTime: string): string | null {
+  if (!localDateTime) return null;
+  const parsed = new Date(localDateTime);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
+}
+
+function formatScheduledAt(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString();
+}
+
 export default function ClinicianDashboard() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [deletingPatientId, setDeletingPatientId] = useState<string | null>(null);
+  const [deletingAppointmentId, setDeletingAppointmentId] = useState<string | null>(null);
+
   // Patient filters
   const [patientQ, setPatientQ] = useState("");
-  const [patientFromDate, setPatientFromDate] = useState(""); // YYYY-MM-DD
-  const [patientToDate, setPatientToDate] = useState(""); // YYYY-MM-DD
+  const [patientFromDate, setPatientFromDate] = useState("");
+  const [patientToDate, setPatientToDate] = useState("");
 
   // Appointment filters
   const [apptQ, setApptQ] = useState("");
-  const [apptFromDate, setApptFromDate] = useState(""); // YYYY-MM-DD
-  const [apptToDate, setApptToDate] = useState(""); // YYYY-MM-DD
+  const [apptFromDate, setApptFromDate] = useState("");
+  const [apptToDate, setApptToDate] = useState("");
 
-  // ✅ Patient search checkbox filters
+  // Patient search checkbox filters
   const [patientFilters, setPatientFilters] = useState({
     name: true,
     id: false,
@@ -56,7 +74,7 @@ export default function ClinicianDashboard() {
     notes: false,
   });
 
-  // ✅ Appointment search checkbox filters
+  // Appointment search checkbox filters
   const [apptFilters, setApptFilters] = useState({
     patient: true,
     clinician: false,
@@ -81,7 +99,10 @@ export default function ClinicianDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [p, a] = await Promise.all([apiFetch("/patients"), apiFetch("/appointments")]);
+      const [p, a] = await Promise.all([
+        apiFetch("/patients/"),
+        apiFetch("/appointments/"),
+      ]);
       setPatients(p as Patient[]);
       setAppointments(a as Appointment[]);
     } catch (e: any) {
@@ -107,7 +128,6 @@ export default function ClinicianDashboard() {
     const to = patientToDate ? new Date(patientToDate + "T23:59:59Z").getTime() : null;
 
     return patients.filter((p) => {
-      // text filter (based on checkboxes)
       if (query) {
         const fields: string[] = [];
 
@@ -123,7 +143,6 @@ export default function ClinicianDashboard() {
         if (!blob.includes(query)) return false;
       }
 
-      // created_at date range filter
       if (from || to) {
         const created = p.created_at ? new Date(p.created_at).getTime() : 0;
         if (from && created < from) return false;
@@ -140,7 +159,6 @@ export default function ClinicianDashboard() {
     const to = apptToDate ? new Date(apptToDate + "T23:59:59Z").getTime() : null;
 
     return appointments.filter((a) => {
-      // text filter (based on checkboxes)
       if (query) {
         const p = patientsById.get(a.patient_id);
         const patientName = p ? `${p.first_name} ${p.last_name}` : "";
@@ -159,7 +177,6 @@ export default function ClinicianDashboard() {
         if (!blob.includes(query)) return false;
       }
 
-      // date range filter (based on scheduled_at date portion)
       if (from || to) {
         const dateOnly = toDateOnly(a.scheduled_at);
         const ts = dateOnly ? new Date(dateOnly + "T12:00:00Z").getTime() : 0;
@@ -178,7 +195,7 @@ export default function ClinicianDashboard() {
         throw new Error("First and last name are required");
       }
 
-      await apiFetch("/patients", {
+      await apiFetch("/patients/", {
         method: "POST",
         body: JSON.stringify({
           first_name: firstName.trim(),
@@ -205,13 +222,15 @@ export default function ClinicianDashboard() {
     setError("");
     try {
       if (!apptPatientId) throw new Error("Select a patient");
-      if (!scheduledAt.trim()) throw new Error("Scheduled time is required");
 
-      await apiFetch("/appointments", {
+      const scheduledAtIso = localDateTimeToIso(scheduledAt);
+      if (!scheduledAtIso) throw new Error("Pick a valid scheduled date and time");
+
+      await apiFetch("/appointments/", {
         method: "POST",
         body: JSON.stringify({
           patient_id: apptPatientId,
-          scheduled_at: scheduledAt.trim(),
+          scheduled_at: scheduledAtIso,
           reason: reason.trim() || null,
         }),
       });
@@ -224,9 +243,42 @@ export default function ClinicianDashboard() {
     }
   }
 
+  async function handleDeletePatient(id: string, label: string) {
+    const deleteReason = window.prompt(`Reason for deleting patient "${label}"?`);
+    if (!deleteReason || !deleteReason.trim()) return;
+
+    setDeletingPatientId(id);
+    setError("");
+
+    try {
+      await deletePatient(id, deleteReason.trim());
+      await load();
+    } catch (e: any) {
+      setError(e?.message || "Failed to delete patient");
+    } finally {
+      setDeletingPatientId(null);
+    }
+  }
+
+  async function handleDeleteAppointment(id: string, label: string) {
+    const deleteReason = window.prompt(`Reason for deleting appointment "${label}"?`);
+    if (!deleteReason || !deleteReason.trim()) return;
+
+    setDeletingAppointmentId(id);
+    setError("");
+
+    try {
+      await deleteAppointment(id, deleteReason.trim());
+      await load();
+    } catch (e: any) {
+      setError(e?.message || "Failed to delete appointment");
+    } finally {
+      setDeletingAppointmentId(null);
+    }
+  }
+
   return (
     <Layout title="Clinician Dashboard">
-      {/* ✅ Notification bell row */}
       <div className="mb-3 flex items-center justify-end">
         <NotificationBell />
       </div>
@@ -244,7 +296,6 @@ export default function ClinicianDashboard() {
           </div>
         )}
 
-        {/* Create forms */}
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
             <h2 className="text-lg font-semibold">Create Patient</h2>
@@ -263,10 +314,11 @@ export default function ClinicianDashboard() {
                 onChange={(e) => setLastName(e.target.value)}
               />
               <input
+                type="date"
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
-                placeholder="DOB (YYYY-MM-DD)"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
+                aria-label="Date of birth"
               />
               <input
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
@@ -309,10 +361,11 @@ export default function ClinicianDashboard() {
               </select>
 
               <input
+                type="datetime-local"
                 className="rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-sky-950"
-                placeholder="Scheduled at (e.g., 2026-03-02T15:30:00Z) *"
                 value={scheduledAt}
                 onChange={(e) => setScheduledAt(e.target.value)}
+                aria-label="Scheduled date and time"
               />
 
               <input
@@ -339,7 +392,6 @@ export default function ClinicianDashboard() {
           </div>
         </div>
 
-        {/* Patients */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Patients</h2>
@@ -376,7 +428,6 @@ export default function ClinicianDashboard() {
             />
           </div>
 
-          {/* ✅ Patients checkbox filters */}
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
             <span className="font-semibold">Filter by:</span>
 
@@ -435,6 +486,7 @@ export default function ClinicianDashboard() {
                   <th className="py-2 pr-4">Email</th>
                   <th className="py-2 pr-4">Phone</th>
                   <th className="py-2 pr-4">Created</th>
+                  <th className="py-2 pr-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -448,12 +500,22 @@ export default function ClinicianDashboard() {
                     <td className="py-2 pr-4">{p.email ?? "-"}</td>
                     <td className="py-2 pr-4">{p.phone ?? "-"}</td>
                     <td className="py-2 pr-4">{toDateOnly(p.created_at)}</td>
+                    <td className="py-2 pr-4">
+                      <button
+                        type="button"
+                        className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/40"
+                        onClick={() => handleDeletePatient(p.id, `${p.first_name} ${p.last_name}`)}
+                        disabled={deletingPatientId === p.id}
+                      >
+                        {deletingPatientId === p.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </td>
                   </tr>
                 ))}
 
                 {!loading && filteredPatients.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-3 text-slate-600 dark:text-slate-300">
+                    <td colSpan={6} className="py-3 text-slate-600 dark:text-slate-300">
                       No matching patients.
                     </td>
                   </tr>
@@ -463,7 +525,6 @@ export default function ClinicianDashboard() {
           </div>
         </div>
 
-        {/* Appointments */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Appointments</h2>
@@ -492,7 +553,6 @@ export default function ClinicianDashboard() {
             />
           </div>
 
-          {/* ✅ Appointments checkbox filters */}
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
             <span className="font-semibold">Filter by:</span>
 
@@ -550,26 +610,38 @@ export default function ClinicianDashboard() {
                   <th className="py-2 pr-4">Patient</th>
                   <th className="py-2 pr-4">Status</th>
                   <th className="py-2 pr-4">Reason</th>
+                  <th className="py-2 pr-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAppointments.map((a) => {
                   const p = patientsById.get(a.patient_id);
                   const patientLabel = p ? `${p.first_name} ${p.last_name}` : a.patient_id;
+                  const apptLabel = `${patientLabel} - ${formatScheduledAt(a.scheduled_at)}`;
 
                   return (
                     <tr key={a.id} className="border-t border-slate-100 dark:border-slate-700">
-                      <td className="py-2 pr-4">{a.scheduled_at}</td>
+                      <td className="py-2 pr-4">{formatScheduledAt(a.scheduled_at)}</td>
                       <td className="py-2 pr-4">{patientLabel}</td>
                       <td className="py-2 pr-4">{a.status}</td>
                       <td className="py-2 pr-4">{a.reason ?? "-"}</td>
+                      <td className="py-2 pr-4">
+                        <button
+                          type="button"
+                          className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/40"
+                          onClick={() => handleDeleteAppointment(a.id, apptLabel)}
+                          disabled={deletingAppointmentId === a.id}
+                        >
+                          {deletingAppointmentId === a.id ? "Deleting..." : "Delete"}
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
 
                 {!loading && filteredAppointments.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-3 text-slate-600 dark:text-slate-300">
+                    <td colSpan={5} className="py-3 text-slate-600 dark:text-slate-300">
                       No matching appointments.
                     </td>
                   </tr>

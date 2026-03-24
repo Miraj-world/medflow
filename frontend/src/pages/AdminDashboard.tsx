@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "../components/Layout";
 import NotificationBell from "../components/NotificationBell";
+import HospitalAnalyticsPanel from "../components/HospitalAnalyticsPanel";
 import { apiFetch } from "../api/client";
 import { registerUser } from "../api/auth";
+import { deletePatient } from "../api/patients";
+import { deleteAppointment } from "../api/appointments";
 
 type Patient = {
   id: string;
@@ -35,18 +38,15 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Create user form
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newRole, setNewRole] = useState<NewUserRole>("clinician");
   const [creatingUser, setCreatingUser] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Admin searches
   const [patientSearch, setPatientSearch] = useState("");
   const [apptSearch, setApptSearch] = useState("");
 
-  // ✅ Patient checkbox filters
   const [patientFilters, setPatientFilters] = useState({
     name: true,
     id: false,
@@ -55,7 +55,6 @@ export default function AdminDashboard() {
     notes: false,
   });
 
-  // ✅ Appointment checkbox filters
   const [apptFilters, setApptFilters] = useState({
     patient: true,
     clinician: false,
@@ -63,6 +62,9 @@ export default function AdminDashboard() {
     date: true,
     reason: false,
   });
+
+  const [deletingPatientId, setDeletingPatientId] = useState<string | null>(null);
+  const [deletingAppointmentId, setDeletingAppointmentId] = useState<string | null>(null);
 
   const patientsById = useMemo(() => {
     const map = new Map<string, Patient>();
@@ -74,20 +76,11 @@ export default function AdminDashboard() {
     return appointments.filter((a) => (a.status || "").toLowerCase() === "scheduled").length;
   }, [appointments]);
 
-  // Keep a bigger pool so searching feels useful, but not huge UI
-  const recentPatientsPool = useMemo(() => {
-    return [...patients]
-      .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
-      .slice(0, 50);
-  }, [patients]);
-
   const filteredPatients = useMemo(() => {
     const q = patientSearch.trim().toLowerCase();
+    if (!q) return patients;
 
-    // Default (no search): show 8 most recent
-    if (!q) return recentPatientsPool.slice(0, 8);
-
-    return recentPatientsPool.filter((p) => {
+    return patients.filter((p) => {
       const fields: string[] = [];
 
       if (patientFilters.id) fields.push(p.id);
@@ -96,34 +89,21 @@ export default function AdminDashboard() {
       if (patientFilters.phone) fields.push(p.phone ?? "");
       if (patientFilters.notes) fields.push(p.notes ?? "");
 
-      // If somehow none are checked, no match
       if (fields.length === 0) return false;
 
-      const blob = fields.join(" ").toLowerCase();
-      return blob.includes(q);
+      return fields.join(" ").toLowerCase().includes(q);
     });
-  }, [recentPatientsPool, patientSearch, patientFilters]);
-
-  const recentAppointmentsPool = useMemo(() => {
-    return [...appointments]
-      .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
-      .slice(0, 50);
-  }, [appointments]);
+  }, [patients, patientSearch, patientFilters]);
 
   const filteredAppointments = useMemo(() => {
     const q = apptSearch.trim().toLowerCase();
+    if (!q) return appointments;
 
-    // Default (no search): show 8 most recent appointments
-    const base = !q ? recentAppointmentsPool.slice(0, 8) : recentAppointmentsPool;
-
-    if (!q) return base;
-
-    return base.filter((a) => {
+    return appointments.filter((a) => {
       const p = patientsById.get(a.patient_id);
       const patientName = p ? `${p.first_name} ${p.last_name}` : "";
 
       const fields: string[] = [];
-
       if (apptFilters.patient) fields.push(patientName, a.patient_id);
       if (apptFilters.clinician) fields.push(a.clinician ?? "");
       if (apptFilters.status) fields.push(a.status ?? "");
@@ -132,20 +112,34 @@ export default function AdminDashboard() {
 
       if (fields.length === 0) return false;
 
-      const blob = fields.join(" ").toLowerCase();
-      return blob.includes(q);
+      return fields.join(" ").toLowerCase().includes(q);
     });
-  }, [recentAppointmentsPool, apptSearch, patientsById, apptFilters]);
+  }, [appointments, apptSearch, patientsById, apptFilters]);
 
   async function load() {
     setLoading(true);
     setError("");
     try {
-      const [p, a] = await Promise.all([apiFetch("/patients"), apiFetch("/appointments")]);
-      setPatients(p as Patient[]);
-      setAppointments(a as Appointment[]);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load admin data");
+      const [patientsRes, apptsRes] = await Promise.allSettled([
+        apiFetch("/patients/"),
+        apiFetch("/appointments/"),
+      ]);
+
+      const errors: string[] = [];
+
+      if (patientsRes.status === "fulfilled") {
+        setPatients(patientsRes.value as Patient[]);
+      } else {
+        errors.push(patientsRes.reason?.message || "Failed to load patients");
+      }
+
+      if (apptsRes.status === "fulfilled") {
+        setAppointments(apptsRes.value as Appointment[]);
+      } else {
+        errors.push(apptsRes.reason?.message || "Failed to load appointments");
+      }
+
+      if (errors.length) setError(errors.join(" | "));
     } finally {
       setLoading(false);
     }
@@ -178,11 +172,48 @@ export default function AdminDashboard() {
     }
   }
 
+  async function handleDeletePatient(id: string, label: string) {
+    const reason = window.prompt(`Reason for deleting patient "${label}"?`);
+    if (!reason || !reason.trim()) return;
+
+    setDeletingPatientId(id);
+    setError("");
+    setSuccessMsg("");
+
+    try {
+      await deletePatient(id, reason.trim());
+      setSuccessMsg(`Deleted patient: ${label}`);
+      await load();
+    } catch (e: any) {
+      setError(e?.message || "Failed to delete patient");
+    } finally {
+      setDeletingPatientId(null);
+    }
+  }
+
+  async function handleDeleteAppointment(id: string, label: string) {
+    const reason = window.prompt(`Reason for deleting appointment "${label}"?`);
+    if (!reason || !reason.trim()) return;
+
+    setDeletingAppointmentId(id);
+    setError("");
+    setSuccessMsg("");
+
+    try {
+      await deleteAppointment(id, reason.trim());
+      setSuccessMsg(`Deleted appointment: ${label}`);
+      await load();
+    } catch (e: any) {
+      setError(e?.message || "Failed to delete appointment");
+    } finally {
+      setDeletingAppointmentId(null);
+    }
+  }
+
   const canCreateUser = newUsername.trim().length > 0 && newPassword.trim().length >= 4;
 
   return (
     <Layout title="Admin Dashboard">
-      {/* ✅ Notification bell row */}
       <div className="mb-3 flex items-center justify-end">
         <NotificationBell />
       </div>
@@ -206,7 +237,6 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Overview */}
         <div className="grid gap-6 md:grid-cols-3">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
             <p className="text-sm text-slate-600 dark:text-slate-300">Patients</p>
@@ -224,7 +254,8 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Create account */}
+        <HospitalAnalyticsPanel />
+
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Create Staff Account</h2>
@@ -274,11 +305,11 @@ export default function AdminDashboard() {
           </div>
 
           <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-            This uses the backend registration endpoint. Accounts persist in <code>backend/data/users.json</code>.
+            This uses the backend registration endpoint. Accounts are stored in the primary database. Admin access can
+            also be bootstrapped via <code>ADMIN_USERNAME</code> and <code>ADMIN_PASSWORD</code>.
           </p>
         </div>
 
-        {/* Patients + Search */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Patients</h2>
@@ -291,7 +322,6 @@ export default function AdminDashboard() {
             />
           </div>
 
-          {/* ✅ Patients filters */}
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
             <span className="font-semibold">Filter by:</span>
 
@@ -348,6 +378,7 @@ export default function AdminDashboard() {
                   <th className="py-2 pr-4">Name</th>
                   <th className="py-2 pr-4">DOB</th>
                   <th className="py-2 pr-4">Email</th>
+                  <th className="py-2 pr-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -359,12 +390,22 @@ export default function AdminDashboard() {
                     </td>
                     <td className="py-2 pr-4">{p.dob ?? "-"}</td>
                     <td className="py-2 pr-4">{p.email ?? "-"}</td>
+                    <td className="py-2 pr-4">
+                      <button
+                        type="button"
+                        className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/40"
+                        onClick={() => handleDeletePatient(p.id, `${p.first_name} ${p.last_name}`)}
+                        disabled={deletingPatientId === p.id}
+                      >
+                        {deletingPatientId === p.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </td>
                   </tr>
                 ))}
 
                 {!loading && filteredPatients.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="py-3 text-slate-600 dark:text-slate-300">
+                    <td colSpan={4} className="py-3 text-slate-600 dark:text-slate-300">
                       No matching patients.
                     </td>
                   </tr>
@@ -372,15 +413,8 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
-
-          {!patientSearch.trim() && (
-            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-              Showing the 8 most recent patients. Use search to view more.
-            </p>
-          )}
         </div>
 
-        {/* Appointments + Search */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Appointments</h2>
@@ -393,7 +427,6 @@ export default function AdminDashboard() {
             />
           </div>
 
-          {/* ✅ Appointments filters */}
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
             <span className="font-semibold">Filter by:</span>
 
@@ -451,12 +484,14 @@ export default function AdminDashboard() {
                   <th className="py-2 pr-4">Patient</th>
                   <th className="py-2 pr-4">Status</th>
                   <th className="py-2 pr-4">Reason</th>
+                  <th className="py-2 pr-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAppointments.map((a) => {
                   const p = patientsById.get(a.patient_id);
                   const patientLabel = p ? `${p.first_name} ${p.last_name}` : a.patient_id;
+                  const apptLabel = `${patientLabel} - ${a.scheduled_at}`;
 
                   return (
                     <tr key={a.id} className="border-t border-slate-100 dark:border-slate-700">
@@ -464,13 +499,23 @@ export default function AdminDashboard() {
                       <td className="py-2 pr-4">{patientLabel}</td>
                       <td className="py-2 pr-4">{a.status}</td>
                       <td className="py-2 pr-4">{a.reason ?? "-"}</td>
+                      <td className="py-2 pr-4">
+                        <button
+                          type="button"
+                          className="rounded-lg border border-red-300 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/40"
+                          onClick={() => handleDeleteAppointment(a.id, apptLabel)}
+                          disabled={deletingAppointmentId === a.id}
+                        >
+                          {deletingAppointmentId === a.id ? "Deleting..." : "Delete"}
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
 
                 {!loading && filteredAppointments.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-3 text-slate-600 dark:text-slate-300">
+                    <td colSpan={5} className="py-3 text-slate-600 dark:text-slate-300">
                       No matching appointments.
                     </td>
                   </tr>
@@ -478,12 +523,6 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
-
-          {!apptSearch.trim() && (
-            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
-              Showing the 8 most recent appointments. Use search to view more.
-            </p>
-          )}
         </div>
       </div>
     </Layout>

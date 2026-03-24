@@ -18,3 +18,7 @@ export function listAppointments() {
 export function createAppointment(a: Omit<Appointment, "id" | "created_at">) {
   return http.post<Appointment>("/appointments", a);
 }
+
+export function deleteAppointment(id: string, reason: string) {
+  return http.del<void>(`/appointments/${id}`, { reason });
+}
