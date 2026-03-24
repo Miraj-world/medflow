@@ -17,6 +17,18 @@ from passlib.context import CryptContext
 # ---------------------
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
+def _is_railway() -> bool:
+    return any(
+        os.getenv(key)
+        for key in (
+            "RAILWAY_ENVIRONMENT",
+            "RAILWAY_PROJECT_ID",
+            "RAILWAY_SERVICE_NAME",
+            "RAILWAY_STATIC_URL",
+            "RAILWAY_PUBLIC_DOMAIN",
+        )
+    )
+
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
@@ -31,7 +43,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # ---------------------
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
-    raise RuntimeError("SECRET_KEY is required (Railway only).")
+    if _is_railway():
+        raise RuntimeError("SECRET_KEY is required on Railway.")
+    SECRET_KEY = "dev-secret-change-me"
 
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
