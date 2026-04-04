@@ -39,7 +39,7 @@ def _load_key() -> bytes | None:
     if KEY_FILE.exists():
         return KEY_FILE.read_bytes().strip()
 
-    # No key available (Railway filesystems can be read-only).
+    # No key available (some platforms use read-only filesystems).
     return None
 
 

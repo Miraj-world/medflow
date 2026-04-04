@@ -1,6 +1,7 @@
 import uuid
 
 from sqlalchemy import Column, Date, DateTime, Text, Uuid, func
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -17,3 +18,5 @@ class Patient(Base):
     address = Column(Text, nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    diseases = relationship("Disease", secondary="patient_diseases", back_populates="patients")

@@ -8,5 +8,7 @@ python-dotenv
 alembic
 cryptography
 
-# PostgreSQL driver (used by Railway in production, ignored locally with SQLite)
+# AI module + disease system use existing dependencies (no extra packages required).
+
+# PostgreSQL driver (used by Render in production, ignored locally with SQLite)
 psycopg2-binary

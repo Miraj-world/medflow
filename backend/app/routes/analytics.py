@@ -5,32 +5,29 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.deps import get_current_user
+from app.deps import require_roles
 from app.utils.data_encryption import try_decrypt_text
 from app.storage import load_json
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
-
-def _require_staff(user: Dict[str, Any]) -> None:
-    role = (user or {}).get("role")
-    if role not in ("admin", "clinician"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions",
-        )
-
+STAFF_ROLES = ("admin", "clinician")
 
 def _load_hospital_appointments() -> List[Dict[str, Any]]:
     data = load_json("hospital_appointments.json", [])
     return data if isinstance(data, list) else []
 
 
-@router.get("/hospital")
-def hospital_analytics(user: Dict[str, Any] = Depends(get_current_user)):
-    _require_staff(user)
+def _sanitize_procedure_name(value: str) -> str:
+    if not value:
+        return "Unknown"
+    trimmed = value.strip()
+    if trimmed.startswith("gAAAA") and len(trimmed) > 30:
+        return "Encrypted procedure"
+    return trimmed
 
-    rows = _load_hospital_appointments()
+
+def compute_hospital_analytics(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
     total = len(rows)
 
     if total == 0:
@@ -57,7 +54,8 @@ def hospital_analytics(user: Dict[str, Any] = Depends(get_current_user)):
 
         readmission = str(row.get("readmission", "")).strip().lower()
         outcome = str(row.get("outcome", "Unknown")).strip() or "Unknown"
-        procedure = try_decrypt_text(str(row.get("procedure", "Unknown")))
+        procedure_raw = try_decrypt_text(str(row.get("procedure", "Unknown")))
+        procedure = _sanitize_procedure_name(procedure_raw)
 
         length_of_stay_values.append(los)
         satisfaction_values.append(sat)
@@ -91,3 +89,13 @@ def hospital_analytics(user: Dict[str, Any] = Depends(get_current_user)):
         "outcome_distribution": dict(outcomes),
         "procedure_cost_analysis": procedure_cost_analysis,
     }
+
+
+def get_hospital_analytics_payload() -> Dict[str, Any]:
+    rows = _load_hospital_appointments()
+    return compute_hospital_analytics(rows)
+
+
+@router.get("/hospital")
+def hospital_analytics(user: Dict[str, Any] = Depends(require_roles(STAFF_ROLES))):
+    return get_hospital_analytics_payload()

@@ -1,10 +1,11 @@
-# Backend – Healthcare Platform
+# Backend - Healthcare Platform
 
 ## Overview
 
 This is the backend API for the Healthcare Platform. It is built using **FastAPI** with **SQLAlchemy** for database access.
 
-By default the backend uses **SQLite** for local development — no database installation required. For production, set `DATABASE_URL` to a PostgreSQL connection string.
+By default the backend uses **SQLite** for local development -- no database installation required. For production, set
+`DATABASE_URL` to a PostgreSQL connection string (Render).
 
 ---
 
@@ -41,10 +42,12 @@ The SQLite database file (`medflow.db`) is created automatically on first run.
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `DATABASE_URL` | No | `sqlite:///./medflow.db` | Database connection string |
-| `SECRET_KEY` | Yes | — | JWT signing secret |
-| `ENCRYPTION_KEY` | No | — | AES key for sensitive data |
+| `SECRET_KEY` | Yes | -- | JWT signing secret |
+| `ENCRYPTION_KEY` | No | -- | AES key for sensitive data |
+| `FRONTEND_URL` | No | -- | Render frontend URL for CORS |
+| `CORS_ORIGINS` | No | `http://localhost:5173` | Comma-separated dev origins |
 
-> To use **PostgreSQL**, set `DATABASE_URL` and uncomment `psycopg2-binary` in `requirements.txt`.
+> To use **PostgreSQL**, set `DATABASE_URL` (Render) and ensure the DB is reachable.
 
 ---
 

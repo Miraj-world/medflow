@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import Select from "react-select";
+import type { MultiValue } from "react-select";
 import Layout from "../components/Layout";
 import NotificationBell from "../components/NotificationBell";
 import { apiFetch } from "../api/client";
+import AskMedflowPanel from "../components/AskMedflowPanel";
 
 type Patient = {
   id: string;
@@ -13,6 +16,7 @@ type Patient = {
   email?: string | null;
   address?: string | null;
   notes?: string | null;
+  diseases?: { id: number; name: string }[];
 };
 
 type Appointment = {
@@ -24,6 +28,16 @@ type Appointment = {
   reason?: string | null;
   status: string;
   notes?: string | null;
+};
+
+type Disease = {
+  id: number;
+  name: string;
+};
+
+type DiseaseOption = {
+  value: number;
+  label: string;
 };
 
 function toDateOnly(isoOrDate: string) {
@@ -47,6 +61,7 @@ function formatScheduledAt(value: string) {
 export default function ClinicianDashboard() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [diseases, setDiseases] = useState<Disease[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -84,6 +99,7 @@ export default function ClinicianDashboard() {
   const [dob, setDob] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [selectedDiseases, setSelectedDiseases] = useState<DiseaseOption[]>([]);
 
   // create appointment form
   const [apptPatientId, setApptPatientId] = useState("");
@@ -94,9 +110,14 @@ export default function ClinicianDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [p, a] = await Promise.all([apiFetch("/patients"), apiFetch("/appointments")]);
+      const [p, a, d] = await Promise.all([
+        apiFetch("/patients"),
+        apiFetch("/appointments"),
+        apiFetch("/diseases"),
+      ]);
       setPatients(p as Patient[]);
       setAppointments(a as Appointment[]);
+      setDiseases(d as Disease[]);
     } catch (e: any) {
       setError(e?.message || "Failed to load clinician data");
     } finally {
@@ -184,6 +205,15 @@ export default function ClinicianDashboard() {
     });
   }, [appointments, apptQ, apptFromDate, apptToDate, patientsById, apptFilters]);
 
+  const diseaseOptions = useMemo(
+    () =>
+      diseases.map((d) => ({
+        value: d.id,
+        label: d.name,
+      })),
+    [diseases]
+  );
+
   async function addPatient() {
     setError("");
     try {
@@ -199,6 +229,7 @@ export default function ClinicianDashboard() {
           dob: dob.trim() || null,
           email: email.trim() || null,
           phone: phone.trim() || null,
+          disease_ids: selectedDiseases.map((d) => d.value),
         }),
       });
 
@@ -207,6 +238,7 @@ export default function ClinicianDashboard() {
       setDob("");
       setEmail("");
       setPhone("");
+      setSelectedDiseases([]);
 
       await load();
     } catch (e: any) {
@@ -296,6 +328,19 @@ export default function ClinicianDashboard() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              <div className="md:col-span-2">
+                <Select
+                  isMulti
+                  options={diseaseOptions}
+                  value={selectedDiseases}
+                  onChange={(value: MultiValue<DiseaseOption>) =>
+                    setSelectedDiseases(value as DiseaseOption[])
+                  }
+                  placeholder="Select diseases (optional)"
+                  className="text-sm"
+                  classNamePrefix="react-select"
+                />
+              </div>
             </div>
 
             <button
@@ -355,6 +400,8 @@ export default function ClinicianDashboard() {
             </div>
           </div>
         </div>
+
+        <AskMedflowPanel />
 
         {/* Patients */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
@@ -451,6 +498,7 @@ export default function ClinicianDashboard() {
                   <th className="py-2 pr-4">DOB</th>
                   <th className="py-2 pr-4">Email</th>
                   <th className="py-2 pr-4">Phone</th>
+                  <th className="py-2 pr-4">Diseases</th>
                   <th className="py-2 pr-4">Created</th>
                 </tr>
               </thead>
@@ -464,13 +512,18 @@ export default function ClinicianDashboard() {
                     <td className="py-2 pr-4">{p.dob ?? "-"}</td>
                     <td className="py-2 pr-4">{p.email ?? "-"}</td>
                     <td className="py-2 pr-4">{p.phone ?? "-"}</td>
+                    <td className="py-2 pr-4">
+                      {p.diseases && p.diseases.length > 0
+                        ? p.diseases.map((d) => d.name).join(", ")
+                        : "-"}
+                    </td>
                     <td className="py-2 pr-4">{toDateOnly(p.created_at)}</td>
                   </tr>
                 ))}
 
                 {!loading && filteredPatients.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-3 text-slate-600 dark:text-slate-300">
+                    <td colSpan={6} className="py-3 text-slate-600 dark:text-slate-300">
                       No matching patients.
                     </td>
                   </tr>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Layout from "../components/Layout";
 import NotificationBell from "../components/NotificationBell";
 import HospitalAnalyticsPanel from "../components/HospitalAnalyticsPanel";
+import AskMedflowPanel from "../components/AskMedflowPanel";
 import { apiFetch } from "../api/client";
 import { registerUser } from "../api/auth";
 
@@ -15,6 +16,7 @@ type Patient = {
   email?: string | null;
   address?: string | null;
   notes?: string | null;
+  diseases?: { id: number; name: string }[];
 };
 
 type Appointment = {
@@ -231,6 +233,8 @@ export default function AdminDashboard() {
 
         <HospitalAnalyticsPanel />
 
+        <AskMedflowPanel />
+
         {/* Create account */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-sky-900/40">
           <div className="flex items-center justify-between gap-4">
@@ -356,6 +360,7 @@ export default function AdminDashboard() {
                   <th className="py-2 pr-4">Name</th>
                   <th className="py-2 pr-4">DOB</th>
                   <th className="py-2 pr-4">Email</th>
+                  <th className="py-2 pr-4">Diseases</th>
                 </tr>
               </thead>
               <tbody>
@@ -367,12 +372,17 @@ export default function AdminDashboard() {
                     </td>
                     <td className="py-2 pr-4">{p.dob ?? "-"}</td>
                     <td className="py-2 pr-4">{p.email ?? "-"}</td>
+                    <td className="py-2 pr-4">
+                      {p.diseases && p.diseases.length > 0
+                        ? p.diseases.map((d) => d.name).join(", ")
+                        : "-"}
+                    </td>
                   </tr>
                 ))}
 
                 {!loading && filteredPatients.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="py-3 text-slate-600 dark:text-slate-300">
+                    <td colSpan={4} className="py-3 text-slate-600 dark:text-slate-300">
                       No matching patients.
                     </td>
                   </tr>

@@ -5,25 +5,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
-def _is_railway() -> bool:
-    return any(
-        os.getenv(key)
-        for key in (
-            "RAILWAY_ENVIRONMENT",
-            "RAILWAY_PROJECT_ID",
-            "RAILWAY_SERVICE_NAME",
-            "RAILWAY_STATIC_URL",
-            "RAILWAY_PUBLIC_DOMAIN",
-        )
-    )
-
-
-DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("DATABASE_PRIVATE_URL")
+DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
-    if _is_railway():
-        raise RuntimeError("DATABASE_URL is required on Railway.")
-    # Default to SQLite for local development
+    # Default to SQLite for local development only
     DATABASE_URL = "sqlite:///./medflow.db"
 
 connect_args = {}

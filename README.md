@@ -13,18 +13,18 @@ Full-stack healthcare platform built with:
 
 This application provides user registration and login functionality with role-based access (admin, clinician, patient). Passwords are securely hashed before storage, and authentication is handled using JWT tokens.
 
+It also includes a lightweight AI module ("Ask Medflow"), hospital analytics insights, and a structured disease selection system for patients.
+
 ---
 
 ## Quick Start (Windows)
 
 1. Double-click `start.bat`
 2. The script will:
-   - Configure the frontend to use the Railway backend
-   - Install frontend dependencies (if missing)
-   - Launch the frontend development server
-
-Backend (default):
-https://medflow-production-9424.up.railway.app
+   - Configure the backend for local SQLite
+   - Configure the frontend for `http://localhost:8000`
+   - Install dependencies (if missing)
+   - Launch backend + frontend
 
 Frontend:
 http://localhost:5173
@@ -33,15 +33,7 @@ http://localhost:5173
 
 ## Local Mode (Backend + Frontend)
 
-Use local mode if you want the API running on your machine.
-
-start.bat local
-
-What this does:
-- Creates `backend/.env` from `backend/.env.example` if missing
-- Creates a Python venv and installs backend dependencies
-- Writes `frontend/.env` with `VITE_API_URL=http://localhost:8000`
-- Starts the backend and frontend in separate windows
+`start.bat` is local-only and uses SQLite + localhost by default.
 
 ---
 
@@ -63,8 +55,7 @@ From the `frontend` folder:
 npm install
 npm run dev
 
-By default the frontend calls the Railway backend. To use a local backend,
-create `frontend/.env` with:
+By default the frontend uses `VITE_API_URL`. For local dev, ensure:
 
 VITE_API_URL=http://localhost:8000
 
@@ -73,7 +64,7 @@ VITE_API_URL=http://localhost:8000
 ## Database Configuration
 
 - Local dev defaults to SQLite with `DATABASE_URL=sqlite:///./medflow.db`.
-- Production uses PostgreSQL via Railway or a local Postgres container.
+- Production uses PostgreSQL (Render).
 - You can start a local Postgres instance using `docker-compose.yml`.
 
 The active database is controlled by `DATABASE_URL` in `backend/.env`.
@@ -88,7 +79,7 @@ Backend (`backend/.env`):
 - `ENCRYPTION_KEY` (optional) key for field-level encryption
 
 Frontend (`frontend/.env`):
-- `VITE_API_URL` (optional) defaults to Railway API
+- `VITE_API_URL` (required for production builds)
 
 ---
 
@@ -100,11 +91,27 @@ set, the backend creates a local key at `backend/data/.medflow_encryption.key`
 
 ---
 
-## Deployment Notes
+## Deployment Notes (Render)
 
-- The backend honors `PORT` and binds to `0.0.0.0` for platforms like Railway.
-- Set Railway variables: `DATABASE_URL`, `SECRET_KEY`, and optionally `ENCRYPTION_KEY`.
-- The frontend defaults to Railway unless `VITE_API_URL` is set.
+- Backend start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Backend env vars: `DATABASE_URL`, `SECRET_KEY`, `ENCRYPTION_KEY`, `FRONTEND_URL`
+- Frontend env vars: `VITE_API_URL=https://your-backend.onrender.com`
+
+---
+
+## Render Deployment Steps
+
+1. Create a **Render PostgreSQL** database.
+2. Create a **Render Web Service** for the backend:
+   - Root directory: `backend/`
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - Set env vars: `DATABASE_URL`, `SECRET_KEY`, `ENCRYPTION_KEY`, `FRONTEND_URL`
+3. Create a **Render Static Site** for the frontend (or deploy to Vercel):
+   - Root directory: `frontend/`
+   - Build command: `npm install && npm run build`
+   - Publish directory: `dist`
+   - Set env var: `VITE_API_URL=https://your-backend.onrender.com`
 
 ---
 
@@ -124,6 +131,50 @@ healthcare-platform/
 - Passwords are hashed using bcrypt.
 - JWT tokens are issued upon successful login.
 - Role-based user structure: admin, clinician, patient.
+
+---
+
+## AI Module (Ask Medflow)
+
+Staff-only endpoints (admin, clinician):
+
+- `POST /ai/chat`  
+  Request: `{"message": "What is the readmission rate?"}`  
+  Response: `{"answer": "...", "data": {...}, "intent": "...", "confidence": 0.0}`
+- `GET /ai/insights`  
+  Response: `{"insights": ["..."]}`
+- `GET /ai/recommendations`  
+  Response: `{"recommendations": [{"text": "...", "confidence": 0.0, "explanation": "..."}]}`
+
+The AI module reuses existing analytics logic and applies rule-based intent parsing (no heavy LLM dependencies).
+
+---
+
+## Diseases (Many-to-Many)
+
+The backend now supports a `Disease` model and patient ↔ disease assignments.
+
+Endpoints:
+- `GET /diseases` (staff-only) returns all diseases.
+- `POST /patients` accepts `disease_ids: number[]`.
+
+Example create payload:
+```json
+{
+  "first_name": "Ava",
+  "last_name": "Nguyen",
+  "dob": "1990-08-12",
+  "disease_ids": [1, 3]
+}
+```
+
+Seeded on startup (if empty): Diabetes, Hypertension, Asthma, Cancer, Heart Disease.
+
+---
+
+## Frontend Notes
+
+The clinician dashboard uses a searchable multi-select (react-select) to pick diseases and sends `disease_ids` to the backend. The admin and clinician patient tables now display selected diseases.
 
 ---
 

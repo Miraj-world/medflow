@@ -2,7 +2,7 @@
 from typing import Any, Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class LoginRequest(BaseModel):
@@ -40,11 +40,13 @@ class PatientBase(BaseModel):
     email: Optional[str] = None
     address: Optional[str] = None
     notes: Optional[str] = None
+    disease_ids: list[int] = Field(default_factory=list)
 
 
 class PatientOut(PatientBase):
     id: UUID
     created_at: datetime
+    diseases: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class AppointmentBase(BaseModel):

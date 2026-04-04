@@ -4,21 +4,13 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.deps import get_current_user
+from app.deps import require_roles
 from app.utils.data_encryption import try_decrypt_text
 from app.storage import load_json
 
 router = APIRouter(prefix="/hospital-data", tags=["hospital-data"])
 
-
-def _require_staff(user: Dict[str, Any]) -> None:
-    role = (user or {}).get("role")
-    if role not in ("admin", "clinician"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions",
-        )
-
+STAFF_ROLES = ("admin", "clinician")
 
 def _load_list(filename: str) -> List[Dict[str, Any]]:
     data = load_json(filename, [])
@@ -28,9 +20,8 @@ def _load_list(filename: str) -> List[Dict[str, Any]]:
 @router.get("/patients")
 def get_hospital_patients(
     decrypt: bool = Query(default=False),
-    user: Dict[str, Any] = Depends(get_current_user),
+    user: Dict[str, Any] = Depends(require_roles(STAFF_ROLES)),
 ):
-    _require_staff(user)
     rows = _load_list("hospital_patients.json")
 
     if not decrypt:
@@ -48,9 +39,8 @@ def get_hospital_patients(
 @router.get("/appointments")
 def get_hospital_appointments(
     decrypt: bool = Query(default=False),
-    user: Dict[str, Any] = Depends(get_current_user),
+    user: Dict[str, Any] = Depends(require_roles(STAFF_ROLES)),
 ):
-    _require_staff(user)
     rows = _load_list("hospital_appointments.json")
 
     if not decrypt:

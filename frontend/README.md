@@ -1,4 +1,4 @@
-# Frontend – Healthcare Platform
+# Frontend - Healthcare Platform
 
 ## Overview
 
@@ -22,8 +22,10 @@ The frontend communicates with the FastAPI backend for authentication and user-r
 
 From inside the `frontend` directory:
 
-npm install  
+```
+npm install
 npm run dev
+```
 
 The development server runs at:
 
@@ -31,41 +33,33 @@ http://localhost:5173
 
 ---
 
-## Features
-
-- User registration
-- User login
-- JWT token storage in localStorage
-- Role-based routing
-- Protected route handling
-- Integration with backend API endpoints
-
----
-
 ## Backend Requirement
 
-By default, the frontend uses the Railway backend:
+The frontend reads the API base URL from `VITE_API_URL`.
 
-https://medflow-production-9424.up.railway.app
+Local dev:
 
-To use a local backend instead, create `frontend/.env` with:
-
+```
 VITE_API_URL=http://localhost:8000
+```
 
-CORS is configured in the backend to allow requests from:
+Render production:
 
-http://localhost:5173
+```
+VITE_API_URL=https://your-backend.onrender.com
+```
 
 ---
 
 ## Project Structure
 
+```
 frontend/
-│
-├── src/               Application source code  
-├── public/            Static assets  
-├── package.json       Project dependencies  
-└── vite.config.ts     Vite configuration  
+├── src/               Application source code
+├── public/            Static assets
+├── package.json       Project dependencies
+└── vite.config.ts     Vite configuration
+```
 
 ---
 

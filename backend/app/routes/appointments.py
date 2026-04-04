@@ -8,12 +8,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.deps import get_current_user
+from app.deps import require_roles
 from app.database import get_db
 from app.models.appointment import Appointment
 
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
+STAFF_ROLES = ("admin", "clinician")
 
 class AppointmentIn(BaseModel):
     patient_id: str = Field(..., min_length=1)
@@ -27,15 +28,6 @@ class AppointmentIn(BaseModel):
 class AppointmentOut(AppointmentIn):
     id: str
     created_at: str
-
-
-def _require_staff(user: Dict[str, Any]) -> None:
-    role = (user or {}).get("role")
-    if role not in ("admin", "clinician"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions",
-        )
 
 
 def _parse_uuid(value: str, field: str) -> UUID:
@@ -56,14 +48,19 @@ def _parse_datetime(value: str, field: str) -> datetime:
 
 
 @router.get("/", response_model=List[AppointmentOut])
-def list_appointments(user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
-    _require_staff(user)
+def list_appointments(
+    user: Dict[str, Any] = Depends(require_roles(STAFF_ROLES)),
+    db: Session = Depends(get_db),
+):
     return db.query(Appointment).all()
 
 
 @router.get("/{appointment_id}", response_model=AppointmentOut)
-def get_appointment(appointment_id: str, user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
-    _require_staff(user)
+def get_appointment(
+    appointment_id: str,
+    user: Dict[str, Any] = Depends(require_roles(STAFF_ROLES)),
+    db: Session = Depends(get_db),
+):
     appointment_uuid = _parse_uuid(appointment_id, "appointment_id")
     appointment = db.query(Appointment).filter(Appointment.id == appointment_uuid).first()
     if not appointment:
@@ -72,8 +69,11 @@ def get_appointment(appointment_id: str, user: Dict[str, Any] = Depends(get_curr
 
 
 @router.post("/", response_model=AppointmentOut, status_code=201)
-def create_appointment(payload: AppointmentIn, user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
-    _require_staff(user)
+def create_appointment(
+    payload: AppointmentIn,
+    user: Dict[str, Any] = Depends(require_roles(STAFF_ROLES)),
+    db: Session = Depends(get_db),
+):
     patient_uuid = _parse_uuid(payload.patient_id, "patient_id")
     scheduled_at = _parse_datetime(payload.scheduled_at, "scheduled_at")
     new_appt = Appointment(
@@ -94,10 +94,9 @@ def create_appointment(payload: AppointmentIn, user: Dict[str, Any] = Depends(ge
 def update_appointment(
     appointment_id: str,
     payload: AppointmentIn,
-    user: Dict[str, Any] = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    user: Dict[str, Any] = Depends(require_roles(STAFF_ROLES)),
+    db: Session = Depends(get_db),
 ):
-    _require_staff(user)
     appointment_uuid = _parse_uuid(appointment_id, "appointment_id")
     appointment = db.query(Appointment).filter(Appointment.id == appointment_uuid).first()
     if not appointment:
@@ -116,8 +115,11 @@ def update_appointment(
 
 
 @router.delete("/{appointment_id}", status_code=204)
-def delete_appointment(appointment_id: str, user: Dict[str, Any] = Depends(get_current_user), db: Session = Depends(get_db)):
-    _require_staff(user)
+def delete_appointment(
+    appointment_id: str,
+    user: Dict[str, Any] = Depends(require_roles(STAFF_ROLES)),
+    db: Session = Depends(get_db),
+):
     appointment_uuid = _parse_uuid(appointment_id, "appointment_id")
     appointment = db.query(Appointment).filter(Appointment.id == appointment_uuid).first()
     if not appointment:

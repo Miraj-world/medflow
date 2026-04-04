@@ -15,6 +15,8 @@ export default function Register() {
     setError("");
 
     try {
+      if (!username.trim()) throw new Error("Username is required");
+      if (!password.trim()) throw new Error("Password is required");
       await registerUser(username, password, role);
       nav("/login");
     } catch (err: any) {
@@ -29,6 +31,12 @@ export default function Register() {
         className="bg-white p-8 rounded-2xl shadow-xl w-96 space-y-4"
       >
         <h2 className="text-2xl font-semibold">Create account</h2>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <p className="font-semibold mb-1">Account requirements</p>
+          <p>Username is required and must be unique (case-insensitive).</p>
+          <p>Password is required (recommend at least 4 characters).</p>
+          <p>Choose a role: Admin, Clinician, or Patient.</p>
+        </div>
 
         <input
           className="w-full border rounded-xl px-3 py-2"
