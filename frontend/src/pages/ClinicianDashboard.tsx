@@ -118,8 +118,9 @@ export default function ClinicianDashboard() {
       setPatients(p as Patient[]);
       setAppointments(a as Appointment[]);
       setDiseases(d as Disease[]);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load clinician data");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to load clinician data";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -241,8 +242,9 @@ export default function ClinicianDashboard() {
       setSelectedDiseases([]);
 
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Failed to create patient");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to create patient";
+      setError(msg);
     }
   }
 
@@ -266,8 +268,9 @@ export default function ClinicianDashboard() {
       setScheduledAt("");
       setReason("");
       await load();
-    } catch (e: any) {
-      setError(e?.message || "Failed to create appointment");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to create appointment";
+      setError(msg);
     }
   }
 

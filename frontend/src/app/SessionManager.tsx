@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { logout } from "../api/auth";
 import { initTheme } from "../theme";
@@ -10,14 +10,14 @@ export default function SessionManager() {
   const loc = useLocation();
   const timerRef = useRef<number | null>(null);
 
-  function clearTimer() {
+  const clearTimer = useCallback(() => {
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-  }
+  }, []);
 
-  function startTimer() {
+  const startTimer = useCallback(() => {
     clearTimer();
     timerRef.current = window.setTimeout(() => {
       // Only log out if a session exists
@@ -28,7 +28,7 @@ export default function SessionManager() {
       initTheme(null);
       nav("/login", { replace: true });
     }, INACTIVITY_MS);
-  }
+  }, [clearTimer, nav]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -36,10 +36,8 @@ export default function SessionManager() {
     // If not logged in, no need to track activity
     if (!token) return;
 
-    const onActivity = () => {
-      // reset on any activity
-      startTimer();
-    };
+    const onActivity = () => startTimer();
+    const onScroll: EventListener = () => startTimer();
 
     // Start immediately on mount
     startTimer();
@@ -48,7 +46,7 @@ export default function SessionManager() {
     window.addEventListener("mousedown", onActivity);
     window.addEventListener("keydown", onActivity);
     window.addEventListener("touchstart", onActivity);
-    window.addEventListener("scroll", onActivity, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       clearTimer();
@@ -56,10 +54,10 @@ export default function SessionManager() {
       window.removeEventListener("mousedown", onActivity);
       window.removeEventListener("keydown", onActivity);
       window.removeEventListener("touchstart", onActivity);
-      window.removeEventListener("scroll", onActivity as any);
+      window.removeEventListener("scroll", onScroll);
     };
     // re-run if route changes (still keeps one timer and stays accurate)
-  }, [loc.pathname]);
+  }, [clearTimer, loc.pathname, startTimer]);
 
   return null;
 }

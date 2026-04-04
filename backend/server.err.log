@@ -101,3 +101,18 @@ Traceback (most recent call last):
     raise JSONDecodeError("Expecting value", s, err.value) from None
 json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 WARNING:  WatchFiles detected changes in 'app\routes\analytics.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9780]
+WARNING:  WatchFiles detected changes in 'app\routes\analytics.py'. Reloading...
+INFO:     Started server process [3952]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3952]
+INFO:     Started server process [28156]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

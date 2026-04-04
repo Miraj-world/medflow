@@ -19,8 +19,9 @@ export default function Register() {
       if (!password.trim()) throw new Error("Password is required");
       await registerUser(username, password, role);
       nav("/login");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Registration failed";
+      setError(msg);
     }
   }
 

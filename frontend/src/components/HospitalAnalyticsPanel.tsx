@@ -31,8 +31,11 @@ export default function HospitalAnalyticsPanel() {
       try {
         const data = await getHospitalAnalytics();
         if (mounted) setAnalytics(data);
-      } catch (err: any) {
-        if (mounted) setError(err?.message || "Failed to load hospital analytics");
+      } catch (err: unknown) {
+        if (mounted) {
+          const msg = err instanceof Error ? err.message : "Failed to load hospital analytics";
+          setError(msg);
+        }
       } finally {
         if (mounted) setLoading(false);
       }

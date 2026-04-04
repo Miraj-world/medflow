@@ -178,8 +178,9 @@ export default function AdminDashboard() {
       setNewUsername("");
       setNewPassword("");
       setNewRole("clinician");
-    } catch (e: any) {
-      setError(e?.message || "Failed to create user");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to create user";
+      setError(msg);
     } finally {
       setCreatingUser(false);
     }

@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "../api/client";
 
 type ChatResponse = {
   answer: string;
-  data?: Record<string, any> | null;
+  data?: Record<string, unknown> | null;
   intent?: string | null;
   confidence?: number | null;
 };
@@ -22,7 +22,11 @@ export default function AskMedflowPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function loadSummary() {
+  function getErrorMessage(err: unknown, fallback: string) {
+    return err instanceof Error ? err.message : fallback;
+  }
+
+  const loadSummary = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -34,16 +38,16 @@ export default function AskMedflowPanel() {
       setRecommendations(
         (recsRes as { recommendations: RecommendationItem[] })?.recommendations ?? []
       );
-    } catch (e: any) {
-      setError(e?.message || "Failed to load AI summaries.");
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Failed to load AI summaries."));
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     loadSummary();
-  }, []);
+  }, [loadSummary]);
 
   async function handleAsk(e: React.FormEvent) {
     e.preventDefault();
@@ -55,8 +59,8 @@ export default function AskMedflowPanel() {
         body: JSON.stringify({ message: message.trim() }),
       })) as ChatResponse;
       setChat(res);
-    } catch (e: any) {
-      setError(e?.message || "Failed to contact AI service.");
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Failed to contact AI service."));
     }
   }
 

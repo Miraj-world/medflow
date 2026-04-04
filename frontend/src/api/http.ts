@@ -1,5 +1,5 @@
 const API_URL =
-  import.meta.env.VITE_API_URL || "https://medflow-production-9424.up.railway.app";
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:8001" : "");
 
 export function getToken(): string | null {
   return localStorage.getItem("token");
@@ -13,10 +13,10 @@ export function clearToken() {
   localStorage.removeItem("token");
 }
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  if (!API_URL) {
+    throw new Error("VITE_API_URL is not set for production builds.");
+  }
   const token = getToken();
 
   const headers: Record<string, string> = {
@@ -50,11 +50,11 @@ async function request<T>(
 
 export const http = {
   get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string, body?: any) =>
+  post: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "POST", body: JSON.stringify(body ?? {}) }),
-  put: <T>(path: string, body?: any) =>
+  put: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "PUT", body: JSON.stringify(body ?? {}) }),
-  patch: <T>(path: string, body?: any) =>
+  patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "PATCH", body: JSON.stringify(body ?? {}) }),
   del: <T>(path: string) => request<T>(path, { method: "DELETE" }),
 };

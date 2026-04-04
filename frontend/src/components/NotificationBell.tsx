@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "../api/client";
 
 type NotificationItem = {
@@ -17,7 +17,7 @@ export default function NotificationBell() {
 
   const unreadCount = useMemo(() => items.filter((n) => !n.read).length, [items]);
 
-  async function loadNotifications() {
+  const loadNotifications = useCallback(async () => {
     setLoading(true);
     try {
       const data = await apiFetch("/notifications/");
@@ -27,21 +27,20 @@ export default function NotificationBell() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  async function markAllRead() {
+  const markAllRead = useCallback(async () => {
     try {
       await apiFetch("/notifications/mark-all-read", { method: "POST" });
       await loadNotifications();
     } catch {
       // ignore
     }
-  }
+  }, [loadNotifications]);
 
   useEffect(() => {
     if (open) loadNotifications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [loadNotifications, open]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

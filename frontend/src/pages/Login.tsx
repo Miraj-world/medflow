@@ -19,13 +19,6 @@ export default function Login() {
   // Start with whatever is stored for guest (defaults to dark via theme.ts)
   const [theme, setTheme] = useState<ThemeMode>(() => getUserTheme(null));
 
-  // On mount: re-sync from localStorage and apply it (prevents "starts in light" mismatch)
-  useEffect(() => {
-    const stored = getUserTheme(null);
-    setTheme(stored);
-    applyThemeMode(stored);
-  }, []);
-
   // If theme state changes, apply it
   useEffect(() => {
     applyThemeMode(theme);
@@ -57,8 +50,9 @@ export default function Login() {
       if (role === "admin") nav("/admin");
       else if (role === "clinician") nav("/clinician");
       else nav("/clinician"); // no patient portal right now
-    } catch (err: any) {
-      setError(err?.message || "Login failed.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Login failed.";
+      setError(msg);
     }
   }
 

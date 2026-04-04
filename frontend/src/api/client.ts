@@ -14,7 +14,7 @@ async function requestWithBase(path: string, options: RequestInit, baseUrl: stri
       ...options,
       headers,
     });
-  } catch (err) {
+  } catch {
     throw new Error("NETWORK_ERROR");
   }
 
@@ -50,8 +50,8 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
 
   try {
     return await requestWithBase(path, options, API_BASE);
-  } catch (err: any) {
-    if (err?.message === "NETWORK_ERROR") {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "NETWORK_ERROR") {
       throw new Error(
         "Failed to reach the API. Check your internet connection, VITE_API_URL, and that the backend is running."
       );

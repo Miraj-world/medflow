@@ -34,8 +34,11 @@ export default function Dashboard() {
       try {
         const res = (await apiFetch("/dashboard")) as DashboardResponse;
         if (mounted) setData(res);
-      } catch (err: any) {
-        if (mounted) setError(err?.message || "Failed to load dashboard");
+      } catch (err: unknown) {
+        if (mounted) {
+          const msg = err instanceof Error ? err.message : "Failed to load dashboard";
+          setError(msg);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
