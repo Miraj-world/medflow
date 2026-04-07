@@ -1,0 +1,13 @@
+========================================== 
+Healthcare Platform - start.bat log        
+Timestamp: Tue 04/07/2026 12:18:05.55                   
+Root: "C:\Users\invis\Downloads\medflow-main\medflow-main"                             
+========================================== 
+                                           
+Starting launcher (local dev only)...
+Using Python: py -3
+[FRONTEND] Enter frontend folder...
+[FRONTEND] In: C:\Users\invis\Downloads\medflow-main\medflow-main\frontend
+[FRONTEND] node_modules exists (skipping install).
+[FRONTEND] Launching Vite window...
+DONE - windows launched.

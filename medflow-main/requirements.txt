@@ -1,0 +1,4 @@
+# Backend dependencies live in backend/requirements.txt.
+# This file remains as a convenience entry point.
+# AI module and disease system use existing Python dependencies.
+-r backend/requirements.txt

@@ -1,0 +1,142 @@
+INFO:     127.0.0.1:62945 - "OPTIONS /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62945 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62945 - "OPTIONS /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62945 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62945 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55345 - "OPTIONS /auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55345 - "POST /auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "OPTIONS /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "OPTIONS /patients HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "OPTIONS /appointments HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "OPTIONS /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "OPTIONS /patients HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "OPTIONS /appointments HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "GET /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "GET /patients HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:49639 - "GET /appointments HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:49639 - "GET /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "GET /patients HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:49639 - "GET /appointments HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:49639 - "OPTIONS /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "OPTIONS /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "GET /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "GET /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "GET /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49639 - "GET /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60755 - "OPTIONS /notifications/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60755 - "GET /notifications/ HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:52125 - "POST /auth/register HTTP/1.1" 409 Conflict
+INFO:     127.0.0.1:56439 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56446 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56446 - "GET /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56446 - "GET /patients HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56446 - "GET /appointments HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56446 - "GET /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56446 - "GET /patients HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56446 - "GET /appointments HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56446 - "GET /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56446 - "GET /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56446 - "GET /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56446 - "GET /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60107 - "POST /auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61687 - "POST /auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:50464 - "POST /auth/register HTTP/1.1" 409 Conflict
+INFO:     127.0.0.1:52313 - "POST /auth/register HTTP/1.1" 409 Conflict
+INFO:     127.0.0.1:54539 - "POST /auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "GET /patients HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56502 - "GET /appointments HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56502 - "OPTIONS /diseases HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "OPTIONS /diseases HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "GET /patients HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56502 - "GET /appointments HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56502 - "GET /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "GET /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "GET /diseases HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56502 - "GET /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "GET /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "GET /diseases HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56502 - "OPTIONS /diseases/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "OPTIONS /diseases/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "GET /diseases/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "GET /diseases/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56933 - "OPTIONS /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50845 - "OPTIONS /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54618 - "OPTIONS /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64960 - "OPTIONS /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50845 - "GET /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64960 - "GET /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54618 - "GET /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50845 - "GET /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60500 - "GET /ai/recommendations HTTP/1.1" 200 OK
+ INFO:     127.0.0.1:62779 - "OPTIONS /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62880 - "OPTIONS /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62779 - "GET /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62880 - "GET /ai/insights HTTP/1.1" 200 OK
+ INFO:     127.0.0.1:59074 - "OPTIONS /auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59074 - "POST /auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53878 - "OPTIONS /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56395 - "POST /auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:54375 - "POST /auth/register HTTP/1.1" 409 Conflict
+INFO:     127.0.0.1:54375 - "POST /auth/register HTTP/1.1" 409 Conflict
+INFO:     127.0.0.1:63245 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63245 - "OPTIONS /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63245 - "OPTIONS /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56657 - "OPTIONS /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50687 - "OPTIONS /appointments HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63110 - "OPTIONS /patients HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54826 - "OPTIONS /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50687 - "OPTIONS /appointments HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56657 - "OPTIONS /patients HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63110 - "GET /appointments HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:50687 - "GET /patients HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:63110 - "GET /appointments HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56657 - "OPTIONS /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50687 - "GET /patients HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:63110 - "OPTIONS /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56657 - "OPTIONS /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50687 - "GET /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63110 - "GET /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63110 - "GET /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50687 - "GET /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63245 - "GET /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49783 - "GET /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49783 - "GET /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54826 - "GET /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54826 - "GET /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63245 - "GET /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49956 - "OPTIONS /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49956 - "GET /analytics/hospital HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65412 - "OPTIONS /auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65412 - "POST /auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49666 - "OPTIONS /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64211 - "POST /auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64211 - "OPTIONS /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49666 - "OPTIONS /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64211 - "OPTIONS /patients HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49666 - "OPTIONS /appointments HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64211 - "OPTIONS /diseases HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49666 - "OPTIONS /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60846 - "OPTIONS /patients HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65355 - "GET /diseases HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:52270 - "GET /appointments HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:56387 - "GET /patients HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:65355 - "GET /diseases HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:60846 - "OPTIONS /diseases/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52270 - "GET /appointments HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:65355 - "GET /patients HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:60846 - "OPTIONS /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56387 - "OPTIONS /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65355 - "OPTIONS /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60846 - "GET /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52270 - "GET /diseases/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60846 - "GET /patients/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52270 - "GET /diseases/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65355 - "GET /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65355 - "GET /appointments/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64211 - "GET /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64211 - "GET /ai/insights HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49666 - "GET /ai/recommendations HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49666 - "GET /ai/recommendations HTTP/1.1" 200 OK

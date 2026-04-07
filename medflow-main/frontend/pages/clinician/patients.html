@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patients</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<h1>Patients</h1>
+
+<div>
+  <input type="text" id="search-box" placeholder="Search by name or ID">
+  <button onclick="search()">Search</button>
+  <button onclick="clearSearch()">Clear</button>
+</div>
+
+<a href="patient-edit.html" style="display: block; margin: 20px 0;">+ Add Patient</a>
+
+<table border="1" style="width: 100%; border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>DOB</th>
+      <th>Phone</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="patient-table">
+    <tr><td colspan="5">Loading...</td></tr>
+  </tbody>
+</table>
+
+<script>
+  let allPatients = [];
+  
+  async function loadPatients() {
+    try {
+      const token = localStorage.getItem('token');
+      const resp = await fetch('http://127.0.0.1:8000/patients', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!resp.ok) throw new Error('Failed to load patients');
+      
+      allPatients = await resp.json();
+      renderPatients(allPatients);
+    } catch (err) {
+      document.getElementById('patient-table').innerHTML = 
+        `<tr><td colspan="5">Error: ${err.message}</td></tr>`;
+    }
+  }
+  
+  function renderPatients(patients) {
+    const tbody = document.getElementById('patient-table');
+    if (patients.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5">No patients found</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = patients.map(p => `
+      <tr>
+        <td>${p.id}</td>
+        <td>${p.name}</td>
+        <td>${p.dob}</td>
+        <td>${p.phone}</td>
+        <td>
+          <a href="patient-view.html?id=${p.id}">View</a>
+          <a href="patient-edit.html?id=${p.id}">Edit</a>
+          <button onclick="deletePatient('${p.id}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+  
+  function search() {
+    const query = document.getElementById('search-box').value.toLowerCase();
+    if (!query) {
+      renderPatients(allPatients);
+      return;
+    }
+    
+    const filtered = allPatients.filter(p =>
+      p.name.toLowerCase().includes(query) ||
+      p.id.toLowerCase().includes(query)
+    );
+    renderPatients(filtered);
+  }
+  
+  function clearSearch() {
+    document.getElementById('search-box').value = '';
+    renderPatients(allPatients);
+  }
+  
+  async function deletePatient(patientId) {
+    if (!confirm('Delete this patient?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const resp = await fetch(`http://127.0.0.1:8000/patients/${patientId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!resp.ok) throw new Error('Delete failed');
+      
+      alert('Patient deleted');
+      loadPatients();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  }
+  
+  // Load on page load
+  loadPatients();
+</script>
+
+</body>
+</html>
