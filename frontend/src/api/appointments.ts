@@ -12,9 +12,9 @@ export type Appointment = {
 };
 
 export function listAppointments() {
-  return http.get<Appointment[]>("/appointments");
+  return http.get<Appointment[]>("/appointments/");
 }
 
 export function createAppointment(a: Omit<Appointment, "id" | "created_at">) {
-  return http.post<Appointment>("/appointments", a);
+  return http.post<Appointment>("/appointments/", a);
 }

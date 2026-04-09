@@ -1,7 +1,10 @@
 ========================================== 
 Healthcare Platform - start.bat log        
-Timestamp: Thu 04/09/2026  8:23:44.45                   
+Timestamp: Thu 04/09/2026 10:38:51.99                   
 Root: "D:\Medflow v3\medflow"                             
+Log Dir: "D:\Medflow v3\medflow\logs"                        
+Backend Out Log: "D:\Medflow v3\medflow\backend\logs\server_20260409_103851.out.log"       
+Backend Err Log: "D:\Medflow v3\medflow\backend\logs\server_20260409_103851.err.log"       
 ========================================== 
                                            
 Starting launcher (local dev only)...

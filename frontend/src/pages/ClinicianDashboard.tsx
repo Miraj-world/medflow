@@ -111,9 +111,9 @@ export default function ClinicianDashboard() {
     setError("");
     try {
       const [p, a, d] = await Promise.all([
-        apiFetch("/patients"),
-        apiFetch("/appointments"),
-        apiFetch("/diseases"),
+        apiFetch("/patients/"),
+        apiFetch("/appointments/"),
+        apiFetch("/diseases/"),
       ]);
       setPatients(p as Patient[]);
       setAppointments(a as Appointment[]);
@@ -222,7 +222,7 @@ export default function ClinicianDashboard() {
         throw new Error("First and last name are required");
       }
 
-      await apiFetch("/patients", {
+      await apiFetch("/patients/", {
         method: "POST",
         body: JSON.stringify({
           first_name: firstName.trim(),
@@ -256,7 +256,7 @@ export default function ClinicianDashboard() {
       const scheduledAtIso = localDateTimeToIso(scheduledAt);
       if (!scheduledAtIso) throw new Error("Pick a valid scheduled date and time");
 
-      await apiFetch("/appointments", {
+      await apiFetch("/appointments/", {
         method: "POST",
         body: JSON.stringify({
           patient_id: apptPatientId,

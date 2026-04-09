@@ -132,8 +132,8 @@ export default function AdminDashboard() {
     setError("");
     try {
       const [patientsRes, apptsRes] = await Promise.allSettled([
-        apiFetch("/patients"),
-        apiFetch("/appointments"),
+        apiFetch("/patients/"),
+        apiFetch("/appointments/"),
       ]);
 
       const errors: string[] = [];

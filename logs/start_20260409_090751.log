@@ -1,7 +1,10 @@
 ========================================== 
 Healthcare Platform - start.bat log        
-Timestamp: Thu 04/09/2026  8:23:44.45                   
+Timestamp: Thu 04/09/2026  9:07:51.50                   
 Root: "D:\Medflow v3\medflow"                             
+Log Dir: "D:\Medflow v3\medflow\logs"                        
+Backend Out Log: "D:\Medflow v3\medflow\backend\logs\server_20260409_090751.out.log"       
+Backend Err Log: "D:\Medflow v3\medflow\backend\logs\server_20260409_090751.err.log"       
 ========================================== 
                                            
 Starting launcher (local dev only)...
@@ -47,7 +50,7 @@ Requirement already satisfied: idna>=2.8 in d:\medflow v3\medflow\backend\.venv\
 Requirement already satisfied: MarkupSafe>=0.9.2 in d:\medflow v3\medflow\backend\.venv\lib\site-packages (from Mako->alembic->-r requirements.txt (line 8)) (3.0.3)
 
 [notice] A new release of pip is available: 25.3 -> 26.0.1
-[notice] To update, run: python.exe -m pip install --upgrade pip
+[notice] To update, run: D:\Medflow v3\medflow\backend\.venv\Scripts\python.exe -m pip install --upgrade pip
 [BACKEND] Launching uvicorn window on port 8001...
 [FRONTEND] Enter frontend folder...
 [FRONTEND] In: D:\Medflow v3\medflow\frontend

@@ -47,12 +47,26 @@ def _parse_datetime(value: str, field: str) -> datetime:
         ) from exc
 
 
+def _appointment_to_dict(appointment: Appointment) -> Dict[str, Any]:
+    return {
+        "id": str(appointment.id),
+        "created_at": appointment.created_at.isoformat() if appointment.created_at else None,
+        "patient_id": str(appointment.patient_id),
+        "clinician": appointment.clinician,
+        "scheduled_at": appointment.scheduled_at.isoformat() if appointment.scheduled_at else None,
+        "reason": appointment.reason,
+        "status": appointment.status,
+        "notes": appointment.notes,
+    }
+
+
 @router.get("/", response_model=List[AppointmentOut])
 def list_appointments(
     user: Dict[str, Any] = Depends(require_roles(STAFF_ROLES)),
     db: Session = Depends(get_db),
 ):
-    return db.query(Appointment).all()
+    appointments = db.query(Appointment).all()
+    return [_appointment_to_dict(a) for a in appointments]
 
 
 @router.get("/{appointment_id}", response_model=AppointmentOut)
@@ -65,7 +79,7 @@ def get_appointment(
     appointment = db.query(Appointment).filter(Appointment.id == appointment_uuid).first()
     if not appointment:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    return appointment
+    return _appointment_to_dict(appointment)
 
 
 @router.post("/", response_model=AppointmentOut, status_code=201)
@@ -87,7 +101,7 @@ def create_appointment(
     db.add(new_appt)
     db.commit()
     db.refresh(new_appt)
-    return new_appt
+    return _appointment_to_dict(new_appt)
 
 
 @router.put("/{appointment_id}", response_model=AppointmentOut)
@@ -111,7 +125,7 @@ def update_appointment(
 
     db.commit()
     db.refresh(appointment)
-    return appointment
+    return _appointment_to_dict(appointment)
 
 
 @router.delete("/{appointment_id}", status_code=204)

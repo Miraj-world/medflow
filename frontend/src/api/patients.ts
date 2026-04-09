@@ -13,9 +13,9 @@ export type Patient = {
 };
 
 export function listPatients() {
-  return http.get<Patient[]>("/patients");
+  return http.get<Patient[]>("/patients/");
 }
 
 export function createPatient(p: Omit<Patient, "id" | "created_at">) {
-  return http.post<Patient>("/patients", p);
+  return http.post<Patient>("/patients/", p);
 }

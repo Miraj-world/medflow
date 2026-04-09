@@ -3,13 +3,22 @@ setlocal EnableExtensions
 
 set "ROOT=%~dp0"
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
-set "LOG=%ROOT%\start_log.txt"
+set "LOGDIR=%ROOT%\logs"
+if not exist "%LOGDIR%" mkdir "%LOGDIR%"
+for /f %%I in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set "TS=%%I"
+if "%TS%"=="" set "TS=%DATE:~-4%%DATE:~4,2%%DATE:~7,2%_%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%"
+set "LOG=%LOGDIR%\start_%TS%.log"
+set "BACKEND_OUT_LOG=%ROOT%\backend\logs\server_%TS%.out.log"
+set "BACKEND_ERR_LOG=%ROOT%\backend\logs\server_%TS%.err.log"
 set "BACKEND_PORT=8001"
 
 echo ========================================== > "%LOG%"
 echo Healthcare Platform - start.bat log        >> "%LOG%"
 echo Timestamp: %DATE% %TIME%                   >> "%LOG%"
 echo Root: "%ROOT%"                             >> "%LOG%"
+echo Log Dir: "%LOGDIR%"                        >> "%LOG%"
+echo Backend Out Log: "%BACKEND_OUT_LOG%"       >> "%LOG%"
+echo Backend Err Log: "%BACKEND_ERR_LOG%"       >> "%LOG%"
 echo ========================================== >> "%LOG%"
 echo.                                           >> "%LOG%"
 
@@ -58,6 +67,7 @@ call :log "Node/npm found."
 call :log "[BACKEND] Enter backend folder..."
 pushd "%ROOT%\backend" || call :die "Could not open backend folder."
 call :log "[BACKEND] In: %CD%"
+if not exist "%ROOT%\backend\logs" mkdir "%ROOT%\backend\logs"
 
 REM Create venv if missing
 if not exist ".venv" (
@@ -93,7 +103,7 @@ if errorlevel 1 (
 )
 
 call :log "[BACKEND] Launching uvicorn window on port %BACKEND_PORT%..."
-start "Backend (FastAPI)" cmd /k "cd /d ""%ROOT%\backend"" && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port %BACKEND_PORT% >> ""%ROOT%\backend\server.out.log"" 2>> ""%ROOT%\backend\server.err.log"" || (echo BACKEND FAILED & pause)"
+start "Backend (FastAPI)" cmd /k "cd /d ""%ROOT%\backend"" && .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port %BACKEND_PORT% >> ""%BACKEND_OUT_LOG%"" 2>> ""%BACKEND_ERR_LOG%"" || (echo BACKEND FAILED & pause)"
 
 popd
 
