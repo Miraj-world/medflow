@@ -21,7 +21,13 @@ def _load():
     if not NOTIFICATION_FILE.exists():
         return []
     with open(NOTIFICATION_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+        raw = f.read().strip()
+        if not raw:
+            return []
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            return []
 
 
 def _save(data):
