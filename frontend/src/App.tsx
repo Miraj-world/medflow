@@ -3,6 +3,7 @@ import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "./components/AppShell";
+import AiChatBubble from "./components/AiChatBubble";
 import { clearSession, getSessionUser, isAuthenticated } from "./api/auth";
 
 const AnalyticsPage = lazy(() =>
@@ -50,70 +51,80 @@ const ProtectedLayout = ({ children }: { children: ReactElement }) => {
 };
 
 export default function App() {
+  const sessionUser = getSessionUser();
+
   return (
-    <Suspense fallback={<div className="feedback-panel">Loading MedFlow module...</div>}>
-      <Routes>
-        <Route
-          path="/login"
-          element={isAuthenticated() ? <Navigate to="/dashboard" replace /> : <LoginPage />}
-        />
-        <Route
-          path="/register"
-          element={isAuthenticated() ? <Navigate to="/dashboard" replace /> : <RegisterPage />}
-        />
-        <Route
-          path="/forgot-password"
-          element={
-            isAuthenticated() ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />
-          }
-        />
-        <Route
-          path="/reset-password"
-          element={isAuthenticated() ? <Navigate to="/dashboard" replace /> : <ResetPasswordPage />}
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <RequireAuth>
-              <ProtectedLayout>
-                <DashboardPage />
-              </ProtectedLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/patients"
-          element={
-            <RequireAuth>
-              <ProtectedLayout>
-                <PatientsPage />
-              </ProtectedLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/patients/:patientId"
-          element={
-            <RequireAuth>
-              <ProtectedLayout>
-                <PatientDetailPage />
-              </ProtectedLayout>
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <RequireAuth>
-              <ProtectedLayout>
-                <AnalyticsPage />
-              </ProtectedLayout>
-            </RequireAuth>
-          }
-        />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Suspense>
+    <>
+      <Suspense fallback={<div className="feedback-panel">Loading MedFlow module...</div>}>
+        <Routes>
+          <Route
+            path="/login"
+            element={isAuthenticated() ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+          />
+          <Route
+            path="/register"
+            element={isAuthenticated() ? <Navigate to="/dashboard" replace /> : <RegisterPage />}
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              isAuthenticated() ? <Navigate to="/dashboard" replace /> : <ForgotPasswordPage />
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              isAuthenticated() ? <Navigate to="/dashboard" replace /> : <ResetPasswordPage />
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAuth>
+                <ProtectedLayout>
+                  <DashboardPage />
+                </ProtectedLayout>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/patients"
+            element={
+              <RequireAuth>
+                <ProtectedLayout>
+                  <PatientsPage />
+                </ProtectedLayout>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/patients/:patientId"
+            element={
+              <RequireAuth>
+                <ProtectedLayout>
+                  <PatientDetailPage />
+                </ProtectedLayout>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <RequireAuth>
+                <ProtectedLayout>
+                  <AnalyticsPage />
+                </ProtectedLayout>
+              </RequireAuth>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Suspense>
+
+      <AiChatBubble
+        user={sessionUser ? { name: sessionUser.fullName } : undefined}
+      />
+    </>
   );
 }

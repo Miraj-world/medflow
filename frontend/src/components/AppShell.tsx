@@ -4,12 +4,15 @@ import type { PropsWithChildren } from "react";
 import { clearSession } from "../api/auth";
 import type { AuthUser } from "../types/medflow";
 
+// Navigation links shown in the sidebar
 const navItems = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/patients", label: "Patient List" },
   { to: "/analytics", label: "Analytics" },
 ];
 
+// Main app layout wrapper used after login
+// Provides sidebar navigation, user profile info, and the AI assistant
 export const AppShell = ({
   children,
   user,
@@ -18,7 +21,9 @@ export const AppShell = ({
 
   return (
     <div className="app-shell">
+      {/* Sidebar area */}
       <aside className="sidebar">
+        {/* Branding / intro section */}
         <div className="brand-block">
           <p className="eyebrow">MedFlow</p>
           <h1>Clinical command center</h1>
@@ -27,6 +32,7 @@ export const AppShell = ({
           </p>
         </div>
 
+        {/* Main navigation links */}
         <nav className="sidebar-nav">
           {navItems.map((item) => (
             <NavLink
@@ -39,11 +45,14 @@ export const AppShell = ({
           ))}
         </nav>
 
+        {/* Logged-in user profile card */}
         <div className="profile-card">
           <span className="role-pill">{user.role}</span>
           <h2>{user.fullName}</h2>
           <p>{user.email}</p>
           <p>{user.specialization ?? "Care team access"}</p>
+
+          {/* Clears session and returns user to login page */}
           <button
             className="ghost-button"
             onClick={() => {
@@ -57,7 +66,9 @@ export const AppShell = ({
         </div>
       </aside>
 
+      {/* Main page content rendered inside the shell */}
       <main className="main-content">{children}</main>
+
     </div>
   );
 };
