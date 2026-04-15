@@ -1,57 +1,64 @@
-import { apiFetch } from "./client";
-import { getUserTheme, setUserTheme, applyThemeMode } from "../theme";
+import { fetchJson } from "./client";
+import type { AuthSession, AuthUser } from "../types/medflow";
 
-type LoginResponse = {
-  access_token: string;
-  role: string;
-  theme?: "light" | "dark" | "system";
+const TOKEN_KEY = "medflow.token";
+const USER_KEY = "medflow.user";
+
+export const login = async (email: string, password: string) => {
+  const payload = await fetchJson<AuthSession>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+
+  localStorage.setItem(TOKEN_KEY, payload.token);
+  localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
+  return payload;
 };
 
-export async function login(username: string, password: string) {
-  const data = (await apiFetch("/auth/login", {
+export const register = async (payload: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: "doctor" | "nurse" | "admin";
+  specialization?: string;
+}) =>
+  fetchJson<AuthUser>("/auth/register", {
     method: "POST",
-    body: JSON.stringify({ username, password }),
-  })) as LoginResponse;
+    body: JSON.stringify(payload),
+  });
 
-  localStorage.setItem("token", data.access_token);
-  localStorage.setItem("role", data.role);
+export const requestPasswordReset = async (email: string) =>
+  fetchJson<{ message: string; resetToken?: string; expiresAt?: string }>(
+    "/auth/forgot-password",
+    {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }
+  );
 
-  // store username so theme can be account-based
-  localStorage.setItem("username", username);
+export const resetPassword = async (token: string, password: string) =>
+  fetchJson<{ message: string }>("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, password }),
+  });
 
-  // Prefer backend theme if present; otherwise fallback to saved per-user theme.
-  const backendMode = data.theme;
-  const savedMode = getUserTheme(username);
+export const clearSession = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+};
 
-  const mode = backendMode ?? savedMode ?? "system";
+export const isAuthenticated = () => Boolean(localStorage.getItem(TOKEN_KEY));
 
-  // If backend sent a theme, persist it into your per-user theme store too
-  if (backendMode) {
-    setUserTheme(username, backendMode);
+export const getSessionUser = (): AuthUser | null => {
+  const raw = localStorage.getItem(USER_KEY);
+  if (!raw) {
+    return null;
   }
 
-  applyThemeMode(mode);
-
-  return data.role;
-}
-
-export function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("role");
-  localStorage.removeItem("username");
-}
-
-export function getRole() {
-  return localStorage.getItem("role");
-}
-
-export function getUsername() {
-  return localStorage.getItem("username");
-}
-
-export async function registerUser(username: string, password: string, role: string) {
-  return apiFetch("/auth/register", {
-    method: "POST",
-    body: JSON.stringify({ username, password, role }),
-  });
-}
+  try {
+    return JSON.parse(raw) as AuthUser;
+  } catch {
+    return null;
+  }
+};

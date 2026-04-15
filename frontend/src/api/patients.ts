@@ -1,21 +1,8 @@
-import { http } from "./http";
+import { fetchJson } from "./client";
+import type { PatientDetailResponse, PatientListItem } from "../types/medflow";
 
-export type Patient = {
-  id: string;
-  created_at: string;
-  first_name: string;
-  last_name: string;
-  dob?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  address?: string | null;
-  notes?: string | null;
-};
+export const getPatients = (search = "") =>
+  fetchJson<PatientListItem[]>(`/patients${search ? `?search=${encodeURIComponent(search)}` : ""}`);
 
-export function listPatients() {
-  return http.get<Patient[]>("/patients/");
-}
-
-export function createPatient(p: Omit<Patient, "id" | "created_at">) {
-  return http.post<Patient>("/patients/", p);
-}
+export const getPatientDetail = (patientId: string) =>
+  fetchJson<PatientDetailResponse>(`/patients/${patientId}`);

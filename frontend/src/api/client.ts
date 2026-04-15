@@ -1,61 +1,50 @@
 const API_BASE =
-  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "http://localhost:8001" : "");
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "http://localhost:10000/api" : "/api");
 
-async function requestWithBase(path: string, options: RequestInit, baseUrl: string) {
-  const token = localStorage.getItem("token");
+export const getAuthToken = () => localStorage.getItem("medflow.token");
 
-  const headers = new Headers(options.headers || {});
-  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+export const fetchJson = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
+  const headers = new Headers(options.headers ?? {});
+  const token = getAuthToken();
 
-  let res: Response;
+  if (!headers.has("Content-Type") && options.body) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  let response: Response;
+
   try {
-    res = await fetch(`${baseUrl}${path}`, {
+    response = await fetch(`${API_BASE}${path}`, {
       ...options,
       headers,
     });
   } catch {
-    throw new Error("NETWORK_ERROR");
+    throw new Error(
+      `Could not reach the MedFlow API at ${API_BASE}. Make sure the backend is running and your local environment is configured.`
+    );
   }
 
-  if (!res.ok) {
-    let message = `HTTP ${res.status}`;
+  if (!response.ok) {
+    let message = `Request failed with status ${response.status}`;
+
     try {
-      const err = await res.json();
-      if (err?.detail) message = err.detail;
+      const error = (await response.json()) as { message?: string };
+      message = error.message ?? message;
     } catch {
-      // Non-JSON error response
+      // Ignore JSON parse errors for non-JSON responses.
     }
+
     throw new Error(message);
   }
 
-  // No content
-  if (res.status === 204) return null;
-
-  // Some endpoints might return empty body
-  const text = await res.text();
-  if (!text) return null;
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
-}
-
-export async function apiFetch(path: string, options: RequestInit = {}) {
-  if (!API_BASE) {
-    throw new Error("VITE_API_URL is not set for production builds.");
+  if (response.status === 204) {
+    return null as T;
   }
 
-  try {
-    return await requestWithBase(path, options, API_BASE);
-  } catch (err: unknown) {
-    if (err instanceof Error && err.message === "NETWORK_ERROR") {
-      throw new Error(
-        "Failed to reach the API. Check your internet connection, VITE_API_URL, and that the backend is running."
-      );
-    }
-    throw err;
-  }
-}
+  return (await response.json()) as T;
+};

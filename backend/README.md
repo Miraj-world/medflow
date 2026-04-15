@@ -1,94 +1,27 @@
-# Backend - Healthcare Platform
+# MedFlow Backend
 
-## Overview
+Node.js + Express backend for the MedFlow healthcare dashboard.
 
-This is the backend API for the Healthcare Platform. It is built using **FastAPI** with **SQLAlchemy** for database access.
+## Scripts
 
-By default the backend uses **SQLite** for local development -- no database installation required. For production, set
-`DATABASE_URL` to a PostgreSQL connection string (Render).
+`npm install`
 
----
+`npm run migrate`
 
-## Quick Start
+`npm run seed`
 
-From inside the `backend/` directory:
+`npm start`
 
-```bash
-# 1. Create and activate a virtual environment
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS / Linux
+## Required Environment Variables
 
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Create your environment file
-cp .env.example .env
-
-# 4. Run the server
-uvicorn app.main:app --reload --port 8000
-```
-
-The API runs at **http://127.0.0.1:8000**
-
-Interactive docs: **http://127.0.0.1:8000/docs**
-
-The SQLite database file (`medflow.db`) is created automatically on first run.
-
----
-
-## Environment Variables
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `DATABASE_URL` | No | `sqlite:///./medflow.db` | Database connection string |
-| `SECRET_KEY` | Yes | -- | JWT signing secret |
-| `ENCRYPTION_KEY` | No | -- | AES key for sensitive data |
-| `FRONTEND_URL` | No | -- | Render frontend URL for CORS |
-| `CORS_ORIGINS` | No | `http://localhost:5173` | Comma-separated dev origins |
-
-> To use **PostgreSQL**, set `DATABASE_URL` (Render) and ensure the DB is reachable.
-
----
-
-## API Endpoints
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/health` | Health check |
-| `POST` | `/auth/login` | User login |
-| `POST` | `/auth/register` | User registration |
-| `GET` | `/me` | Current user profile |
-
----
-
-## Authentication
-
-- Passwords are hashed using bcrypt.
-- JWT tokens are issued on login.
-- Role-based access: admin, clinician, patient.
-- Include tokens in the `Authorization` header for protected routes.
-
----
-
-## Project Structure
-
-```
-backend/
-├── app/
-│   ├── main.py          # FastAPI app entry point
-│   ├── database.py      # SQLAlchemy engine & session
-│   ├── models/          # ORM models
-│   ├── routes/          # API route modules
-│   └── utils/           # Auth, encryption helpers
-├── requirements.txt
-├── .env.example
-└── README.md
-```
-
----
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `PORT` optional locally, required by Render at runtime
+- `FRONTEND_URL` optional for CORS
+- `DATABASE_USE_SSL` set to `true` on Render, `false` locally
 
 ## Notes
 
-- The `.venv` directory should not be committed.
-- `medflow.db` is git-ignored and recreated automatically.
+- The API binds to `0.0.0.0` and reads `process.env.PORT`.
+- Migrations are raw SQL files stored in `db/migrations/`.
+- `npm run reset-db` drops and recreates the schema, then reapplies migrations.

@@ -1,4 +1,3 @@
-__pycache__/
-*.py[cod]
+node_modules/
 .env
-data/.medflow_encryption.key
+logs/

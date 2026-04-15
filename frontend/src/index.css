@@ -1,2 +1,524 @@
-@import "tailwindcss";
-@custom-variant dark (&:is(.dark *));
+:root {
+  color: #1e2934;
+  font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(208, 116, 42, 0.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(21, 111, 108, 0.16), transparent 28%),
+    linear-gradient(135deg, #f6f1e8 0%, #f1efe9 42%, #e9ecef 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 310px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem 1.5rem;
+  background: rgba(35, 57, 91, 0.95);
+  color: #f8f5ef;
+}
+
+.brand-block h1,
+.hero-panel h1,
+.login-hero h1,
+.detail-hero h1 {
+  margin: 0.35rem 0 0.75rem;
+  font-family: "Georgia", "Palatino Linotype", serif;
+  line-height: 1.05;
+}
+
+.brand-copy,
+.muted-copy,
+.panel-header p,
+.patient-meta span,
+.summary-card p,
+.list-row p,
+.login-hero p,
+.hero-panel p {
+  color: rgba(38, 53, 68, 0.78);
+}
+
+.sidebar .brand-copy,
+.sidebar p,
+.sidebar h2 {
+  color: rgba(248, 245, 239, 0.9);
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  color: #d0742a;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.nav-link,
+.ghost-button,
+.primary-button {
+  border-radius: 999px;
+  transition: transform 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+.nav-link {
+  padding: 0.95rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+}
+
+.nav-link.active,
+.nav-link:hover {
+  background: linear-gradient(135deg, #d0742a, #f0b25d);
+  color: #201a16;
+  transform: translateX(4px);
+}
+
+.profile-card,
+.panel,
+.hero-panel,
+.stat-card,
+.patient-card,
+.summary-card,
+.login-card,
+.login-hero,
+.detail-hero,
+.feedback-panel {
+  border: 1px solid rgba(35, 57, 91, 0.08);
+  border-radius: 28px;
+  background: rgba(255, 252, 247, 0.88);
+  box-shadow: 0 25px 60px rgba(51, 62, 80, 0.08);
+}
+
+.profile-card {
+  margin-top: auto;
+  padding: 1.2rem;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.profile-card h2,
+.profile-card p {
+  margin: 0.3rem 0;
+}
+
+.role-pill,
+.inline-tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(21, 111, 108, 0.12);
+  color: #0f5b58;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.ghost-button,
+.primary-button {
+  border: 0;
+  cursor: pointer;
+}
+
+.ghost-button {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.16);
+  color: inherit;
+}
+
+.primary-button {
+  padding: 0.95rem 1.2rem;
+  background: linear-gradient(135deg, #d0742a, #f0b25d);
+  color: #201a16;
+  font-weight: 700;
+}
+
+.ghost-button:hover,
+.primary-button:hover {
+  transform: translateY(-1px);
+}
+
+.main-content,
+.login-shell {
+  padding: 2rem;
+}
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.page-stack {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.hero-panel,
+.detail-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.75rem 1.9rem;
+}
+
+.stats-grid,
+.analytics-highlight-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  padding: 1.35rem;
+}
+
+.stat-card p,
+.stat-card span {
+  margin: 0;
+}
+
+.stat-card strong {
+  display: block;
+  margin: 0.6rem 0 0.4rem;
+  font-size: 2rem;
+}
+
+.tone-gold {
+  background: linear-gradient(180deg, rgba(240, 178, 93, 0.28), rgba(255, 252, 247, 0.92));
+}
+
+.tone-teal {
+  background: linear-gradient(180deg, rgba(21, 111, 108, 0.18), rgba(255, 252, 247, 0.92));
+}
+
+.tone-red {
+  background: linear-gradient(180deg, rgba(155, 44, 44, 0.15), rgba(255, 252, 247, 0.92));
+}
+
+.tone-ink {
+  background: linear-gradient(180deg, rgba(35, 57, 91, 0.14), rgba(255, 252, 247, 0.92));
+}
+
+.two-column-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  padding: 1.4rem;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-family: "Georgia", "Palatino Linotype", serif;
+}
+
+.panel-header p {
+  margin: 0.45rem 0 1rem;
+}
+
+.chart-frame {
+  height: 280px;
+}
+
+.list-stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.05rem;
+  border-radius: 20px;
+  background: rgba(248, 245, 239, 0.88);
+  border: 1px solid rgba(35, 57, 91, 0.08);
+}
+
+.list-row strong,
+.patient-card strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.list-row.static {
+  cursor: default;
+}
+
+.row-metrics {
+  display: grid;
+  gap: 0.3rem;
+  text-align: right;
+  color: #23395b;
+  font-weight: 600;
+}
+
+.search-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.2rem;
+}
+
+.search-row input,
+.login-form input {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(35, 57, 91, 0.15);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.patient-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.patient-card {
+  padding: 1.1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.patient-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.patient-meta {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.login-shell {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.5rem;
+  min-height: 100vh;
+  align-items: center;
+}
+
+.login-hero,
+.login-card {
+  padding: 2rem;
+}
+
+.hero-chip-row,
+.factor-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.hero-chip-row span,
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(35, 57, 91, 0.1);
+}
+
+.legend-chip i {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+}
+
+.login-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.login-form label {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 600;
+}
+
+.split-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.auth-select {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(35, 57, 91, 0.15);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.login-footnote {
+  margin-top: 1rem;
+  color: #516274;
+}
+
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.auth-links a {
+  color: #23395b;
+  font-weight: 700;
+}
+
+.form-success {
+  color: #0f5b58;
+  background: rgba(196, 233, 224, 0.9);
+  border-radius: 18px;
+  padding: 0.85rem 1rem;
+}
+
+.token-panel {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-radius: 20px;
+  background: rgba(35, 57, 91, 0.06);
+}
+
+.token-panel p,
+.token-panel code {
+  margin: 0;
+}
+
+.token-panel code {
+  word-break: break-all;
+  color: #23395b;
+}
+
+.inline-button {
+  display: inline-flex;
+  justify-content: center;
+}
+
+.form-error,
+.feedback-panel.error {
+  color: #8e1d1d;
+  background: rgba(245, 214, 214, 0.8);
+}
+
+.feedback-panel {
+  padding: 1.25rem 1.4rem;
+}
+
+.feedback-panel.compact {
+  margin-bottom: 1rem;
+}
+
+.risk-badge-block {
+  display: grid;
+  justify-items: end;
+  gap: 0.25rem;
+}
+
+.risk-badge {
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.risk-badge.low {
+  background: rgba(21, 111, 108, 0.15);
+  color: #156f6c;
+}
+
+.risk-badge.medium {
+  background: rgba(208, 116, 42, 0.16);
+  color: #b15e1d;
+}
+
+.risk-badge.high {
+  background: rgba(155, 44, 44, 0.15);
+  color: #9b2c2c;
+}
+
+@media (max-width: 1080px) {
+  .app-shell,
+  .login-shell,
+  .split-row,
+  .two-column-layout,
+  .stats-grid,
+  .analytics-highlight-row,
+  .patient-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    padding-bottom: 1rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .main-content,
+  .login-shell {
+    padding: 1rem;
+  }
+
+  .sidebar {
+    padding: 1rem;
+  }
+
+  .hero-panel,
+  .detail-hero,
+  .patient-card-head,
+  .list-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-row {
+    flex-direction: column;
+  }
+}
