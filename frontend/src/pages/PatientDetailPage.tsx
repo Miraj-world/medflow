@@ -10,7 +10,12 @@ import {
 } from "../api/patients";
 import { Panel } from "../components/Panel";
 import { AppointmentForm } from "../components/AppointmentForm";
-import type { PatientDetailResponse } from "../types/medflow";
+import type {
+  AppointmentCreatePayload,
+  AppointmentItem,
+  AppointmentStatus,
+  PatientDetailResponse,
+} from "../types/medflow";
 
 export const PatientDetailPage = () => {
   const { patientId = "" } = useParams();
@@ -18,7 +23,7 @@ export const PatientDetailPage = () => {
   const [data, setData] = useState<PatientDetailResponse | null>(null);
   const [error, setError] = useState("");
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
-  const [appointments, setAppointments] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [isCreatingAppointment, setIsCreatingAppointment] = useState(false);
 
   useEffect(() => {
@@ -49,7 +54,9 @@ export const PatientDetailPage = () => {
     };
   }, [patientId]);
 
-  const handleCreateAppointment = async (appointmentData: any) => {
+  const handleCreateAppointment = async (
+    appointmentData: AppointmentCreatePayload
+  ) => {
     setIsCreatingAppointment(true);
     setError("");
     try {
@@ -65,7 +72,10 @@ export const PatientDetailPage = () => {
     }
   };
 
-  const handleUpdateAppointmentStatus = async (appointmentId: string, status: string) => {
+  const handleUpdateAppointmentStatus = async (
+    appointmentId: string,
+    status: AppointmentStatus
+  ) => {
     setError("");
     try {
       await updateAppointmentStatus(appointmentId, { status });

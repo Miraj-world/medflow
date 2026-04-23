@@ -5,7 +5,18 @@ import { Link } from "react-router-dom";
 import { getPatients, createPatient, deletePatient, updatePatient } from "../api/patients";
 import { Panel } from "../components/Panel";
 import { PatientForm } from "../components/PatientForm";
-import type { PatientListItem } from "../types/medflow";
+import type {
+  PatientCreatePayload,
+  PatientListItem,
+  PatientUpdatePayload,
+} from "../types/medflow";
+
+type PatientEditFormData = PatientUpdatePayload & {
+  firstName: string;
+  lastName: string;
+  primaryCondition: string;
+  careStatus: string;
+};
 
 export const PatientsPage = () => {
   const [search, setSearch] = useState("");
@@ -15,7 +26,7 @@ export const PatientsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingData, setEditingData] = useState<any>(null);
+  const [editingData, setEditingData] = useState<PatientEditFormData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -47,7 +58,7 @@ export const PatientsPage = () => {
     setQuery(search.trim());
   };
 
-  const handleCreatePatient = async (data: any) => {
+  const handleCreatePatient = async (data: PatientCreatePayload) => {
     setIsCreating(true);
     setError("");
     try {
@@ -63,7 +74,10 @@ export const PatientsPage = () => {
     }
   };
 
-  const handleEditPatient = async (patientId: string, data: any) => {
+  const handleEditPatient = async (
+    patientId: string,
+    data: PatientUpdatePayload
+  ) => {
     setIsEditing(true);
     setError("");
     try {
@@ -160,8 +174,8 @@ export const PatientsPage = () => {
                       lastName: patient.last_name,
                       primaryCondition: patient.primary_condition,
                       careStatus: patient.care_status,
-                      phone: patient.phone,
-                      email: patient.email,
+                      phone: patient.phone ?? undefined,
+                      email: patient.email ?? undefined,
                     });
                   }}
                 >

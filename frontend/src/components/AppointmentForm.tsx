@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getDoctors } from "../api/auth";
+import type { AppointmentCreatePayload, DoctorOption } from "../types/medflow";
 
 interface AppointmentFormData {
   patientId: string;
@@ -12,14 +13,14 @@ interface AppointmentFormData {
 
 interface AppointmentFormProps {
   patientId: string;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: AppointmentCreatePayload) => void;
   isLoading?: boolean;
   initialData?: Partial<AppointmentFormData>;
-  doctors?: any[];
+  doctors?: DoctorOption[];
 }
 
 export const AppointmentForm = ({ patientId, onSubmit, isLoading = false, initialData, doctors: initialDoctors }: AppointmentFormProps) => {
-  const [doctors, setDoctors] = useState(initialDoctors || []);
+  const [doctors, setDoctors] = useState<DoctorOption[]>(initialDoctors ?? []);
   const [loading, setLoading] = useState(!initialDoctors);
   const [formData, setFormData] = useState<AppointmentFormData>(
     initialData

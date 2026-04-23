@@ -6,9 +6,23 @@ export type AuthUser = {
   specialization?: string | null;
 };
 
+export type DoctorOption = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  email: string;
+  role: "doctor";
+  specialization?: string | null;
+};
+
 export type AuthSession = {
   token: string;
   user: AuthUser;
+};
+
+export type ApiMessageResponse = {
+  message: string;
 };
 
 export type DashboardOverview = {
@@ -86,6 +100,94 @@ export type PatientListItem = {
   missed_appointments: number;
   active_alerts: number;
   next_appointment?: string | null;
+};
+
+export type PatientMutationResponse = {
+  id: string;
+  doctor_id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  gender: string;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  emergency_contact?: string | null;
+  primary_condition: string;
+  care_status: string;
+  notes?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+};
+
+export type PatientCreatePayload = {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  gender: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  emergencyContact?: string;
+  primaryCondition: string;
+  careStatus?: string;
+  notes?: string;
+  conditions?: string[];
+  diagnosis: string;
+  summary?: string;
+  doctorId: string;
+};
+
+export type PatientUpdatePayload = {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  emergencyContact?: string;
+  primaryCondition?: string;
+  careStatus?: string;
+  notes?: string;
+};
+
+export type AppointmentStatus =
+  | "scheduled"
+  | "completed"
+  | "missed"
+  | "cancelled";
+
+export type AppointmentItem = {
+  id: string;
+  patient_id: string;
+  provider_id: string;
+  appointment_date: string;
+  status: AppointmentStatus;
+  reason: string;
+  notes?: string | null;
+  consultation_minutes?: number | null;
+  created_at: string;
+};
+
+export type AppointmentCreatePayload = {
+  patientId: string;
+  providerId: string;
+  appointmentDate: string;
+  reason: string;
+  notes?: string;
+  consultationMinutes?: number;
+};
+
+export type AppointmentStatusUpdatePayload = {
+  status: AppointmentStatus;
+  consultationMinutes?: number;
+};
+
+export type AppointmentUpdatePayload = {
+  appointmentDate?: string;
+  status?: AppointmentStatus;
+  reason?: string;
+  notes?: string;
+  consultationMinutes?: number;
 };
 
 export type PatientTimelineRecord = {

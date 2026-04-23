@@ -1,31 +1,18 @@
 import { useEffect, useState } from "react";
 import { getDoctors } from "../api/auth";
+import type { DoctorOption, PatientCreatePayload } from "../types/medflow";
 
-interface PatientFormData {
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  gender: string;
-  phone: string;
-  email: string;
-  address: string;
-  emergencyContact: string;
-  primaryCondition: string;
-  careStatus: string;
-  notes: string;
-  diagnosis: string;
-  doctorId: string;
-}
+type PatientFormData = PatientCreatePayload;
 
 interface PatientFormProps {
   onSubmit: (data: PatientFormData) => void;
   isLoading?: boolean;
   initialData?: Partial<PatientFormData>;
-  doctors?: any[];
+  doctors?: DoctorOption[];
 }
 
 export const PatientForm = ({ onSubmit, isLoading = false, initialData, doctors: initialDoctors }: PatientFormProps) => {
-  const [doctors, setDoctors] = useState(initialDoctors || []);
+  const [doctors, setDoctors] = useState<DoctorOption[]>(initialDoctors ?? []);
   const [loading, setLoading] = useState(!initialDoctors);
   const [formData, setFormData] = useState<PatientFormData>(
     initialData
@@ -41,7 +28,9 @@ export const PatientForm = ({ onSubmit, isLoading = false, initialData, doctors:
           primaryCondition: initialData.primaryCondition ?? "",
           careStatus: initialData.careStatus ?? "stable",
           notes: initialData.notes ?? "",
+          conditions: initialData.conditions ?? [],
           diagnosis: initialData.diagnosis ?? "",
+          summary: initialData.summary ?? "",
           doctorId: initialData.doctorId ?? "",
         }
       : {
@@ -56,7 +45,9 @@ export const PatientForm = ({ onSubmit, isLoading = false, initialData, doctors:
           primaryCondition: "",
           careStatus: "stable",
           notes: "",
+          conditions: [],
           diagnosis: "",
+          summary: "",
           doctorId: "",
         }
   );

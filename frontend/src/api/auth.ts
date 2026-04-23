@@ -1,5 +1,5 @@
 import { fetchJson } from "./client";
-import type { AuthSession, AuthUser } from "../types/medflow";
+import type { AuthSession, AuthUser, DoctorOption } from "../types/medflow";
 
 const TOKEN_KEY = "medflow.token";
 const USER_KEY = "medflow.user";
@@ -49,7 +49,7 @@ export const clearSession = () => {
 };
 
 export const getDoctors = () =>
-  fetchJson<any[]>("/auth/doctors");
+  fetchJson<DoctorOption[]>("/auth/doctors");
 
 export const isAuthenticated = () => Boolean(localStorage.getItem(TOKEN_KEY));
 
