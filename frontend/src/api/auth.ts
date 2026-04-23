@@ -48,6 +48,9 @@ export const clearSession = () => {
   localStorage.removeItem(USER_KEY);
 };
 
+export const getDoctors = () =>
+  fetchJson<any[]>("/auth/doctors");
+
 export const isAuthenticated = () => Boolean(localStorage.getItem(TOKEN_KEY));
 
 export const getSessionUser = (): AuthUser | null => {

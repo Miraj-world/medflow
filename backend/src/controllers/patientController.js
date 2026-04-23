@@ -5,6 +5,8 @@ import {
   getPatientDetails,
   getPatientRiskContext,
   listPatients,
+  updatePatient,
+  deletePatient,
 } from "../models/patientModel.js";
 import { AppError } from "../utils/AppError.js";
 import { buildAiSummary } from "../services/aiSummary.js";
@@ -152,4 +154,70 @@ export const getPatientPrediction = async (req, res) => {
   });
 
   res.json(payload);
+};
+
+export const updatePatientHandler = async (req, res) => {
+  const { firstName, lastName, phone, email, address, emergencyContact, primaryCondition, careStatus, notes } = req.body;
+
+  const patient = await withTransaction(async (client) => {
+    const context = await getPatientRiskContext(client, req.params.patientId);
+
+    if (!context) {
+      throw new AppError("Patient not found.", 404);
+    }
+
+    if (req.user.role === "doctor" && context.doctor_id !== req.user.sub) {
+      throw new AppError("You do not have access to this patient.", 403);
+    }
+
+    const updated = await updatePatient(client, req.params.patientId, {
+      firstName,
+      lastName,
+      phone,
+      email,
+      address,
+      emergencyContact,
+      primaryCondition,
+      careStatus,
+      notes,
+    });
+
+    await createActivityLog(client, {
+      userId: req.user.sub,
+      action: "patient_updated",
+      entityType: "patient",
+      entityId: req.params.patientId,
+      details: { updatedFields: Object.keys(req.body) },
+    });
+
+    return updated;
+  });
+
+  res.json(patient);
+};
+
+export const deletePatientHandler = async (req, res) => {
+  await withTransaction(async (client) => {
+    const context = await getPatientRiskContext(client, req.params.patientId);
+
+    if (!context) {
+      throw new AppError("Patient not found.", 404);
+    }
+
+    if (req.user.role === "doctor" && context.doctor_id !== req.user.sub) {
+      throw new AppError("You do not have access to this patient.", 403);
+    }
+
+    await deletePatient(client, req.params.patientId);
+
+    await createActivityLog(client, {
+      userId: req.user.sub,
+      action: "patient_deleted",
+      entityType: "patient",
+      entityId: req.params.patientId,
+      details: {},
+    });
+  });
+
+  res.json({ message: "Patient deleted successfully." });
 };

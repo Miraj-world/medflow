@@ -1,6 +1,9 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import dotenv from "dotenv";
 import { fileURLToPath } from "url";
+
+dotenv.config({ quiet: true });
 
 import { pool, withTransaction } from "../src/config/database.js";
 import { createActivityLog } from "../src/models/activityLogModel.js";

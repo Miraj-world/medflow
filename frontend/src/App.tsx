@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "./components/AppShell";
@@ -50,8 +50,27 @@ const ProtectedLayout = ({ children }: { children: ReactElement }) => {
   return <AppShell user={user}>{children}</AppShell>;
 };
 
+const getInitialTheme = () => {
+  if (typeof window === "undefined") {
+    return "light";
+  }
+
+  const storedTheme = window.localStorage.getItem("medflow.theme");
+  if (storedTheme === "light" || storedTheme === "dark") {
+    return storedTheme;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+};
+
 export default function App() {
   const sessionUser = getSessionUser();
+  const [theme, setTheme] = useState<"light" | "dark">(getInitialTheme);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem("medflow.theme", theme);
+  }, [theme]);
 
   return (
     <>
@@ -122,9 +141,19 @@ export default function App() {
         </Routes>
       </Suspense>
 
-      <AiChatBubble
-        user={sessionUser ? { name: sessionUser.fullName } : undefined}
-      />
+      <button
+        aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+        className="theme-toggle"
+        onClick={() => setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"))}
+        type="button"
+      >
+        <span aria-hidden="true" className="theme-toggle-icon">
+          {theme === "dark" ? "☀" : "☾"}
+        </span>
+        <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+      </button>
+
+      <AiChatBubble userName={sessionUser?.fullName} />
     </>
   );
 }

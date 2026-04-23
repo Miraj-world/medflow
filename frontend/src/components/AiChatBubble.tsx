@@ -2,14 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import chatIcon from "./assets/medflow-ai-icon.png";
 import { getAssistantReply } from "../api/assistant";
 
-// Represents a logged-in user
-type User = {
-  name: string;
-};
-
 // Props passed into the chat bubble component
 type Props = {
-  user?: User;
+  userName?: string;
 };
 
 // Represents a single chat message
@@ -18,7 +13,7 @@ type Message = {
   sender: "assistant" | "user";
 };
 
-export default function AiChatBubble({ user }: Props) {
+export default function AiChatBubble({ userName }: Props) {
   // Controls whether chat window is open
   const [open, setOpen] = useState(false);
 
@@ -37,7 +32,7 @@ export default function AiChatBubble({ user }: Props) {
 
   // Generates a greeting depending on whether the user is logged in
   const getGreeting = () => {
-    if (!user) {
+    if (!userName) {
       const msgs = [
         "Hi, I’m the MedFlow assistant. I can answer any questions you may have.",
         "Hello! I’m the MedFlow assistant — feel free to ask me anything.",
@@ -49,11 +44,11 @@ export default function AiChatBubble({ user }: Props) {
     }
 
     const msgs = [
-      `Welcome back, ${user.name}. How can I help today?`,
-      `Hi ${user.name}. What can I help you with?`,
-      `Good to see you, ${user.name}. Let me know how I can assist.`,
-      `Welcome, ${user.name}. Feel free to ask anything.`,
-      `${user.name}, how can I assist you today?`
+      `Welcome back, ${userName}. How can I help today?`,
+      `Hi ${userName}. What can I help you with?`,
+      `Good to see you, ${userName}. Let me know how I can assist.`,
+      `Welcome, ${userName}. Feel free to ask anything.`,
+      `${userName}, how can I assist you today?`
     ];
     return msgs[Math.floor(Math.random() * msgs.length)];
   };
@@ -67,7 +62,7 @@ export default function AiChatBubble({ user }: Props) {
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [user]);
+  }, [userName]);
 
   // Auto-scrolls to bottom when new messages arrive,
   // but only if the user is already near the bottom
@@ -109,7 +104,7 @@ export default function AiChatBubble({ user }: Props) {
     };
 
     const assistantMessage: Message = {
-      text: getAssistantReply(trimmed, !!user),
+      text: getAssistantReply(trimmed, !!userName),
       sender: "assistant"
     };
 

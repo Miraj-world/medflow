@@ -16,6 +16,7 @@ import {
   createUser,
   findUserByEmail,
   updateUserPassword,
+  listDoctors,
 } from "../models/userModel.js";
 import { AppError } from "../utils/AppError.js";
 
@@ -221,4 +222,10 @@ export const me = async (req, res) => {
     role: req.user.role,
     fullName: req.user.fullName,
   });
+};
+
+export const getDoctors = async (req, res) => {
+  const doctors = await withTransaction(async (client) => listDoctors(client));
+
+  res.json(doctors);
 };

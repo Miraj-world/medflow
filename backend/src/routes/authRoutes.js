@@ -7,6 +7,7 @@ import {
   me,
   register,
   resetPassword,
+  getDoctors,
 } from "../controllers/authController.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 
@@ -23,3 +24,4 @@ authRouter.post("/register", (req, res, next) => {
   return asyncHandler(register)(req, res, next);
 });
 authRouter.get("/me", verifyToken, asyncHandler(me));
+authRouter.get("/doctors", verifyToken, asyncHandler(getDoctors));

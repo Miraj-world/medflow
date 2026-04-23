@@ -48,3 +48,36 @@ Required frontend environment variable:
 - DB-driven alerts for no-show risk and high cardiovascular risk
 - SQL analytics for doctor load, missed appointments, and consultation time
 - Heuristic missed-appointment prediction model for patient detail views
+
+## CRUD Operations
+
+The application now supports full CRUD (Create, Read, Update, Delete) operations for:
+
+### Patients
+- **Create**: Add new patients with full medical history via the Patient List page
+- **Read**: View patient list with search, and detailed patient profiles
+- **Update**: Edit patient information (name, contact, condition, care status, etc.)
+- **Delete**: Remove patients from the system (with confirmation)
+
+### Appointments
+- **Create**: Schedule new appointments for patients
+- **Read**: View all appointments for a patient on the Patient Detail page
+- **Update**: Mark appointments as attended/missed, or modify appointment details
+- **Delete**: Cancel or remove appointments
+
+### Doctors
+- **List**: View all available doctors for selection when creating/managing patients and appointments
+
+## User Interface
+
+### Patient List Page
+- Search and filter patients
+- Quick action buttons to view, edit, or delete patients
+- Add new patient form
+- Inline edit form for updating patient details
+
+### Patient Detail Page
+- View complete patient profile with AI-generated risk summary
+- Manage appointments with ability to create, update status, and delete
+- View medical records, treatments, prescriptions, and alerts
+- Monitor no-show prediction probability

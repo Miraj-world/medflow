@@ -43,3 +43,16 @@ export const updateUserPassword = async (client, userId, passwordHash) => {
     [userId, passwordHash]
   );
 };
+
+export const listDoctors = async (client) => {
+  const { rows } = await client.query(
+    `
+      SELECT id, first_name, last_name, full_name, email, role, specialization
+      FROM users
+      WHERE role = 'doctor' AND is_active = TRUE
+      ORDER BY full_name
+    `
+  );
+
+  return rows;
+};

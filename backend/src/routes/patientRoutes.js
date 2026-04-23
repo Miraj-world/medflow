@@ -6,6 +6,8 @@ import {
   getPatientById,
   getPatientPrediction,
   getPatients,
+  updatePatientHandler,
+  deletePatientHandler,
 } from "../controllers/patientController.js";
 import { checkRole } from "../middleware/checkRole.js";
 import { verifyToken } from "../middleware/verifyToken.js";
@@ -17,3 +19,5 @@ patientRouter.get("/", asyncHandler(getPatients));
 patientRouter.get("/:patientId", asyncHandler(getPatientById));
 patientRouter.get("/:patientId/prediction", asyncHandler(getPatientPrediction));
 patientRouter.post("/", checkRole("doctor", "admin"), asyncHandler(createPatient));
+patientRouter.put("/:patientId", checkRole("doctor", "admin"), asyncHandler(updatePatientHandler));
+patientRouter.delete("/:patientId", checkRole("doctor", "admin"), asyncHandler(deletePatientHandler));

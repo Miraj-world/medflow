@@ -253,3 +253,94 @@ export const createPatientWithInitialRecord = async (
 
   return patient;
 };
+
+export const updatePatient = async (
+  client,
+  patientId,
+  { firstName, lastName, phone, email, address, emergencyContact, primaryCondition, careStatus, notes }
+) => {
+  const updates = [];
+  const values = [patientId];
+  let paramCount = 2;
+
+  if (firstName !== undefined) {
+    updates.push(`first_name = $${paramCount++}`);
+    values.push(firstName);
+  }
+  if (lastName !== undefined) {
+    updates.push(`last_name = $${paramCount++}`);
+    values.push(lastName);
+  }
+  if (phone !== undefined) {
+    updates.push(`phone = $${paramCount++}`);
+    values.push(phone);
+  }
+  if (email !== undefined) {
+    updates.push(`email = $${paramCount++}`);
+    values.push(email ? email.toLowerCase() : null);
+  }
+  if (address !== undefined) {
+    updates.push(`address = $${paramCount++}`);
+    values.push(address);
+  }
+  if (emergencyContact !== undefined) {
+    updates.push(`emergency_contact = $${paramCount++}`);
+    values.push(emergencyContact);
+  }
+  if (primaryCondition !== undefined) {
+    updates.push(`primary_condition = $${paramCount++}`);
+    values.push(primaryCondition);
+  }
+  if (careStatus !== undefined) {
+    updates.push(`care_status = $${paramCount++}`);
+    values.push(careStatus);
+  }
+  if (notes !== undefined) {
+    updates.push(`notes = $${paramCount++}`);
+    values.push(notes);
+  }
+
+  updates.push(`updated_at = NOW()`);
+
+  if (updates.length === 1) {
+    return await getPatientDetailsSimple(client, patientId);
+  }
+
+  const { rows } = await client.query(
+    `
+      UPDATE patients
+      SET ${updates.join(", ")}
+      WHERE id = $1
+      RETURNING id, doctor_id, first_name, last_name, date_of_birth, gender, phone, email, address, emergency_contact, primary_condition, care_status, notes, created_at, updated_at
+    `,
+    values
+  );
+
+  return rows[0] ?? null;
+};
+
+export const getPatientDetailsSimple = async (client, patientId) => {
+  const { rows } = await client.query(
+    `
+      SELECT id, doctor_id, first_name, last_name, date_of_birth, gender, phone, email, address, emergency_contact, primary_condition, care_status, notes, created_at, updated_at
+      FROM patients
+      WHERE id = $1
+    `,
+    [patientId]
+  );
+
+  return rows[0] ?? null;
+};
+
+export const deletePatient = async (client, patientId) => {
+  const { rows } = await client.query(
+    `
+      DELETE FROM patients
+      WHERE id = $1
+      RETURNING id
+    `,
+    [patientId]
+  );
+
+  return rows.length > 0;
+};
