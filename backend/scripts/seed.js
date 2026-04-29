@@ -9,6 +9,7 @@ import { pool, withTransaction } from "../src/config/database.js";
 import { createActivityLog } from "../src/models/activityLogModel.js";
 import { getPatientRiskContext } from "../src/models/patientModel.js";
 import { syncPatientAlerts } from "../src/services/alertService.js";
+import { predictNoShowRisk } from "../src/services/noShowPredictor.js";
 import { runMigrations } from "./migrate.js";
 
 const firstNames = [
@@ -423,7 +424,8 @@ const insertPatientBundle = async (client, doctor, patientIndex) => {
   });
 
   const context = await getPatientRiskContext(client, patientId);
-  await syncPatientAlerts(client, context);
+  const prediction = await predictNoShowRisk({ client, context, scope: {} });
+  await syncPatientAlerts(client, context, prediction);
 
   return { patientId, created: true };
 };

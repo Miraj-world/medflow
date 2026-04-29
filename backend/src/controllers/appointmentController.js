@@ -11,6 +11,7 @@ import {
 import { getPatientRiskContext } from "../models/patientModel.js";
 import { AppError } from "../utils/AppError.js";
 import { syncPatientAlerts } from "../services/alertService.js";
+import { predictNoShowRisk } from "../services/noShowPredictor.js";
 
 export const createAppointmentHandler = async (req, res) => {
   const { patientId, providerId, appointmentDate, reason, notes = null, consultationMinutes = null } = req.body;
@@ -39,7 +40,15 @@ export const createAppointmentHandler = async (req, res) => {
       consultationMinutes,
     });
 
-    await syncPatientAlerts(client, context);
+    const prediction = await predictNoShowRisk({
+      client,
+      context,
+      scope: {
+        role: req.user.role,
+        userId: req.user.sub,
+      },
+    });
+    await syncPatientAlerts(client, context, prediction);
 
     await createActivityLog(client, {
       userId: req.user.sub,
@@ -95,7 +104,15 @@ export const updateAppointmentStatusHandler = async (req, res) => {
 
     const updated = await updateAppointmentStatus(client, req.params.appointmentId, status, consultationMinutes);
 
-    await syncPatientAlerts(client, context);
+    const prediction = await predictNoShowRisk({
+      client,
+      context,
+      scope: {
+        role: req.user.role,
+        userId: req.user.sub,
+      },
+    });
+    await syncPatientAlerts(client, context, prediction);
 
     await createActivityLog(client, {
       userId: req.user.sub,
@@ -134,7 +151,15 @@ export const updateAppointmentHandler = async (req, res) => {
       consultationMinutes,
     });
 
-    await syncPatientAlerts(client, context);
+    const prediction = await predictNoShowRisk({
+      client,
+      context,
+      scope: {
+        role: req.user.role,
+        userId: req.user.sub,
+      },
+    });
+    await syncPatientAlerts(client, context, prediction);
 
     await createActivityLog(client, {
       userId: req.user.sub,
@@ -165,7 +190,15 @@ export const deleteAppointmentHandler = async (req, res) => {
 
     await deleteAppointment(client, req.params.appointmentId);
 
-    await syncPatientAlerts(client, context);
+    const prediction = await predictNoShowRisk({
+      client,
+      context,
+      scope: {
+        role: req.user.role,
+        userId: req.user.sub,
+      },
+    });
+    await syncPatientAlerts(client, context, prediction);
 
     await createActivityLog(client, {
       userId: req.user.sub,

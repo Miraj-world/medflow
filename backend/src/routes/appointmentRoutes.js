@@ -16,8 +16,8 @@ export const appointmentRouter = Router();
 
 appointmentRouter.use(verifyToken);
 appointmentRouter.post("/", checkRole("doctor", "admin"), asyncHandler(createAppointmentHandler));
+appointmentRouter.get("/patient/:patientId", asyncHandler(getPatientAppointmentsHandler));
 appointmentRouter.get("/:appointmentId", asyncHandler(getAppointmentHandler));
 appointmentRouter.put("/:appointmentId/status", checkRole("doctor", "admin"), asyncHandler(updateAppointmentStatusHandler));
 appointmentRouter.put("/:appointmentId", checkRole("doctor", "admin"), asyncHandler(updateAppointmentHandler));
 appointmentRouter.delete("/:appointmentId", checkRole("doctor", "admin"), asyncHandler(deleteAppointmentHandler));
-appointmentRouter.get("/patient/:patientId", asyncHandler(getPatientAppointmentsHandler));

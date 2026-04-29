@@ -22,7 +22,7 @@ export const env = {
   databaseUrl: process.env.DATABASE_URL ?? "",
   jwtSecret: process.env.JWT_SECRET ?? "",
   frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:5173",
-  openAiApiKey: process.env.OPENAI_API_KEY ?? "",
+  openAiApiKey: (process.env.OPENAI_API_KEY ?? "").trim(),
   databaseUseSsl: toBool(
     process.env.DATABASE_USE_SSL,
     process.env.NODE_ENV === "production"

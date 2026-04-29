@@ -37,14 +37,15 @@ export const getPatientById = async (req, res) => {
       throw new AppError("You do not have access to this patient.", 403);
     }
 
-    const aiSummary = await syncPatientAlerts(client, context);
-    const prediction = predictNoShowRisk({
-      conditions: context.conditions,
-      missedCount: context.missed_count,
-      completedCount: context.completed_count,
-      totalCount: context.total_count,
-      dateOfBirth: context.date_of_birth,
+    const prediction = await predictNoShowRisk({
+      client,
+      context,
+      scope: {
+        role: req.user.role,
+        userId: req.user.sub,
+      },
     });
+    const aiSummary = await syncPatientAlerts(client, context, prediction);
 
     const details = await getPatientDetails(client, req.params.patientId);
 
@@ -108,7 +109,15 @@ export const createPatient = async (req, res) => {
     });
 
     const context = await getPatientRiskContext(client, createdPatient.id);
-    await syncPatientAlerts(client, context);
+    const prediction = await predictNoShowRisk({
+      client,
+      context,
+      scope: {
+        role: req.user.role,
+        userId: req.user.sub,
+      },
+    });
+    await syncPatientAlerts(client, context, prediction);
 
     await createActivityLog(client, {
       userId: req.user.sub,
@@ -136,20 +145,22 @@ export const getPatientPrediction = async (req, res) => {
       throw new AppError("You do not have access to this patient.", 403);
     }
 
+    const prediction = await predictNoShowRisk({
+      client,
+      context,
+      scope: {
+        role: req.user.role,
+        userId: req.user.sub,
+      },
+    });
     const aiSummary = buildAiSummary({
-      conditions: context.conditions,
-      missedAppointments: context.missed_count,
+      context,
+      prediction,
     });
 
     return {
       aiSummary,
-      prediction: predictNoShowRisk({
-        conditions: context.conditions,
-        missedCount: context.missed_count,
-        completedCount: context.completed_count,
-        totalCount: context.total_count,
-        dateOfBirth: context.date_of_birth,
-      }),
+      prediction,
     };
   });
 

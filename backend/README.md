@@ -14,6 +14,17 @@ Node.js + Express backend for the MedFlow healthcare dashboard.
 
 `npm run reset-db` - Drop and recreate the database schema
 
+## Swagger API Docs
+
+Swagger is available after the backend starts.
+
+1. From [backend](D:\Medflow v3\medflow-main\medflow-main\backend), run `npm start`
+2. Open [http://localhost:10000/api-docs](http://localhost:10000/api-docs)
+3. For the raw OpenAPI JSON, open [http://localhost:10000/api-docs.json](http://localhost:10000/api-docs.json)
+4. Use `POST /auth/login` first, copy the returned JWT token, then click `Authorize` in Swagger and paste `Bearer <your-token>`
+
+This lets you present the available endpoints interactively, including request bodies, auth requirements, and sample responses.
+
 ## Required Environment Variables
 
 - `DATABASE_URL`

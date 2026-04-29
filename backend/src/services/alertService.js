@@ -1,10 +1,10 @@
 import { ensureAlert, resolveAlertType } from "../models/alertModel.js";
 import { buildAiSummary } from "./aiSummary.js";
 
-export const syncPatientAlerts = async (client, patientContext) => {
+export const syncPatientAlerts = async (client, patientContext, prediction) => {
   const summary = buildAiSummary({
-    conditions: patientContext.conditions,
-    missedAppointments: patientContext.missed_count,
+    context: patientContext,
+    prediction,
   });
 
   const cardiovascularMessage =
@@ -24,7 +24,7 @@ export const syncPatientAlerts = async (client, patientContext) => {
     });
   }
 
-  if (summary.findings.includes("high no-show risk")) {
+  if (prediction?.riskBand === "high") {
     await ensureAlert(client, {
       patientId: patientContext.id,
       type: "high-no-show-risk",

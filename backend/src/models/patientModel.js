@@ -161,7 +161,8 @@ export const getPatientRiskContext = async (client, patientId) => {
         COALESCE(mr.conditions, ARRAY[]::text[]) AS conditions,
         COALESCE(ap.missed_count, 0)::int AS missed_count,
         COALESCE(ap.completed_count, 0)::int AS completed_count,
-        COALESCE(ap.total_count, 0)::int AS total_count
+        COALESCE(ap.total_count, 0)::int AS total_count,
+        COALESCE(al.active_alerts, 0)::int AS active_alerts
       FROM patients p
       LEFT JOIN LATERAL (
         SELECT conditions
@@ -178,6 +179,11 @@ export const getPatientRiskContext = async (client, patientId) => {
         FROM appointments
         WHERE patient_id = p.id
       ) ap ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*) FILTER (WHERE resolved = FALSE) AS active_alerts
+        FROM alerts
+        WHERE patient_id = p.id
+      ) al ON TRUE
       WHERE p.id = $1
     `,
     [patientId]

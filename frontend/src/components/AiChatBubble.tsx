@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import chatIcon from "./assets/medflow-ai-icon.png";
-import { getAssistantReply } from "../api/assistant";
+import { getAssistantReplyFromApi } from "../api/assistant";
 
 // Props passed into the chat bubble component
 type Props = {
@@ -31,7 +31,7 @@ export default function AiChatBubble({ userName }: Props) {
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Generates a greeting depending on whether the user is logged in
-  const getGreeting = useCallback(() => {
+  const getGreeting = () => {
     if (!userName) {
       const msgs = [
         "Hi, I’m the MedFlow assistant. I can answer any questions you may have.",
@@ -51,7 +51,7 @@ export default function AiChatBubble({ userName }: Props) {
       `${userName}, how can I assist you today?`
     ];
     return msgs[Math.floor(Math.random() * msgs.length)];
-  }, [userName]);
+  };
 
   // Runs once when the component loads or when the user changes
   // Opens the chat automatically and adds the first greeting message
@@ -62,7 +62,7 @@ export default function AiChatBubble({ userName }: Props) {
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [getGreeting]);
+  }, [userName]);
 
   // Auto-scrolls to bottom when new messages arrive,
   // but only if the user is already near the bottom
@@ -94,7 +94,7 @@ export default function AiChatBubble({ userName }: Props) {
   };
 
   // Sends the user's message and appends the assistant's reply
-  const handleSend = () => {
+  const handleSend = async () => {
     const trimmed = input.trim();
     if (!trimmed) return;
 
@@ -103,13 +103,24 @@ export default function AiChatBubble({ userName }: Props) {
       sender: "user"
     };
 
-    const assistantMessage: Message = {
-      text: getAssistantReply(trimmed, !!userName),
-      sender: "assistant"
-    };
-
-    setMessages((prev) => [...prev, userMessage, assistantMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
+
+    // Show loading state
+    setMessages((prev) => [
+      ...prev,
+      { text: "Thinking...", sender: "assistant" }
+    ]);
+
+    const reply = await getAssistantReplyFromApi(trimmed);
+    setMessages((prev) => {
+      const newMessages = [...prev];
+      newMessages[newMessages.length - 1] = {
+        text: reply,
+        sender: "assistant"
+      };
+      return newMessages;
+    });
   };
 
   return (
