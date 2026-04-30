@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import chatIcon from "./assets/medflow-ai-icon.png";
 import { getAssistantReplyFromApi } from "../api/assistant";
 
@@ -31,7 +31,7 @@ export default function AiChatBubble({ userName }: Props) {
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Generates a greeting depending on whether the user is logged in
-  const getGreeting = () => {
+  const getGreeting = useCallback(() => {
     if (!userName) {
       const msgs = [
         "Hi, I’m the MedFlow assistant. I can answer any questions you may have.",
@@ -51,7 +51,7 @@ export default function AiChatBubble({ userName }: Props) {
       `${userName}, how can I assist you today?`
     ];
     return msgs[Math.floor(Math.random() * msgs.length)];
-  };
+  }, [userName]);
 
   // Runs once when the component loads or when the user changes
   // Opens the chat automatically and adds the first greeting message
@@ -62,7 +62,7 @@ export default function AiChatBubble({ userName }: Props) {
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [userName]);
+  }, [getGreeting]);
 
   // Auto-scrolls to bottom when new messages arrive,
   // but only if the user is already near the bottom
